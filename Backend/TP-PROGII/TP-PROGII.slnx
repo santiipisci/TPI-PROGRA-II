@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="tpRepository/tpRepository.csproj" />
+  <Project Path="WebAPI-TP-PROGII/WebAPI-TP-PROGII.csproj" />
+</Solution>

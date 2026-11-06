@@ -1,0 +1,150 @@
+﻿{
+   "CodeGenerationMode": 4,
+   "ContextClassName": "db_AutopartesContext",
+   "ContextNamespace": null,
+   "FilterSchemas": false,
+   "IncludeConnectionString": false,
+   "IrregularWords": null,
+   "MinimumProductVersion": "2.6.1706",
+   "ModelNamespace": null,
+   "OutputContextPath": null,
+   "OutputPath": "Models",
+   "PluralRules": null,
+   "PreserveCasingWithRegex": true,
+   "ProjectRootNamespace": "tpRepository",
+   "Schemas": null,
+   "SelectedHandlebarsLanguage": 2,
+   "SelectedToBeGenerated": 0,
+   "SingularRules": null,
+   "T4TemplatePath": null,
+   "Tables": [
+      {
+         "Name": "[dbo].[AUTOPARTE]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AUTOPARTE_MODELO]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[AUTOPLAN]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[CATEGORIA_AUTOPARTE]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[CLIENTE]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[CUOTA_AUTOPLAN]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[DETALLE_FACTURA]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[DETALLE_ORDEN_PEDIDO]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ESCALA_DESCUENTO_MAYORISTA]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ESTADO_AUTOPLAN]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ESTADO_ORDEN]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[FACTURA]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[MARCA]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[MODELO]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ORDEN_PEDIDO]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PRECIO_PRODUCTO]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PRODUCCION_AUTOPARTE]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PRODUCTO]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[TASA_INTERES]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[TIPO_CARROCERIA]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[TIPO_CLIENTE]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[TIPO_COMBUSTIBLE]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[TIPO_PRODUCTO]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[TRANSMISION]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[VEHICULO]",
+         "ObjectType": 0
+      }
+   ],
+   "UiHint": null,
+   "UncountableWords": null,
+   "UseAsyncStoredProcedureCalls": true,
+   "UseBoolPropertiesWithoutDefaultSql": false,
+   "UseDatabaseNames": false,
+   "UseDatabaseNamesForRoutines": true,
+   "UseDateOnlyTimeOnly": true,
+   "UseDbContextSplitting": false,
+   "UseDecimalDataAnnotationForSprocResult": true,
+   "UseFluentApiOnly": true,
+   "UseHandleBars": false,
+   "UseHierarchyId": false,
+   "UseInflector": true,
+   "UseInternalAccessModifiersForSprocsAndFunctions": false,
+   "UseLegacyPluralizer": false,
+   "UseManyToManyEntity": false,
+   "UseNoDefaultConstructor": false,
+   "UseNoNavigations": false,
+   "UseNoObjectFilter": false,
+   "UseNodaTime": false,
+   "UseNullableReferences": false,
+   "UsePrefixNavigationNaming": false,
+   "UseSchemaFolders": false,
+   "UseSchemaNamespaces": false,
+   "UseSpatial": false,
+   "UseT4": false,
+   "UseT4Split": false,
+   "UseTypedTvpParameters": true
+}
