@@ -24,7 +24,6 @@
       <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-dashboard" type="button"><i class="bi bi-speedometer2 me-2"></i>Dashboard</button></li>
       <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-inventario" type="button"><i class="bi bi-box-seam me-2"></i>Inventario</button></li>
       <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-asociaciones" type="button"><i class="bi bi-diagram-3 me-2"></i>Autos y autopartes</button></li>
-      <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-soporte" type="button"><i class="bi bi-headset me-2"></i>Soporte <span class="badge text-bg-danger ms-1" id="ticketBadge">0</span></button></li>
     </ul>
 
     <div class="tab-content">
@@ -112,18 +111,6 @@
         </div>
       </div>
 
-      <!-- SOPORTE -->
-      <div class="tab-pane fade" id="tab-soporte">
-        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-          <h2 class="h5 fw-bold mb-0">Consultas de clientes</h2>
-          <div class="btn-group btn-group-sm" id="ticketFilter">
-            <button class="btn btn-glass active" data-f="todos">Todas</button>
-            <button class="btn btn-glass" data-f="abierto">Abiertas</button>
-            <button class="btn btn-glass" data-f="resuelto">Resueltas</button>
-          </div>
-        </div>
-        <div id="ticketList" class="d-grid gap-3"></div>
-      </div>
     </div>
   </main>
 

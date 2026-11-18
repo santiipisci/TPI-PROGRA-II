@@ -17,6 +17,8 @@ public partial class Producto
 
     public virtual Autoparte Autoparte { get; set; }
 
+    public virtual ICollection<ImagenProducto> Imagenes { get; set; } = new List<ImagenProducto>();
+
     public virtual ICollection<DetalleFactura> DetalleFacturas { get; set; } = new List<DetalleFactura>();
 
     public virtual ICollection<DetalleOrdenPedido> DetalleOrdenPedidos { get; set; } = new List<DetalleOrdenPedido>();

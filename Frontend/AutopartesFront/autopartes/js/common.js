@@ -79,6 +79,15 @@ const UI = (() => {
   const stateRow = (cols, msg, kind = "muted") =>
     `<tr><td colspan="${cols}" class="${kind === "error" ? "text-danger" : "text-muted-2"}">${esc(msg)}</td></tr>`;
 
+  // Abre Gmail en una pestaña nueva con el redactor listo y el mail de la empresa como destinatario
+  function gmailLink(asunto = "", cuerpo = "") {
+    const q = new URLSearchParams({ view: "cm", fs: "1", to: window.MX_CONFIG.EMPRESA_EMAIL, su: asunto, body: cuerpo });
+    return "https://mail.google.com/mail/?" + q.toString();
+  }
+  function consultarParte(p) {
+    return gmailLink(`Consulta por ${p.descripcion} (${p.codigoParte})`, `Hola, quisiera consultar precio y disponibilidad de: ${p.descripcion} (${p.codigoParte}).`);
+  }
+
   /* ---------- Tema ---------- */
   function getTheme() {
     if (currentTheme) return currentTheme;
@@ -246,7 +255,7 @@ const UI = (() => {
           <div class="my-2">${shown}${more}</div>
           <div class="mt-auto d-flex align-items-center justify-content-between">
             <span class="fw-bold fs-5">${p.precio != null ? money(p.precio) : "Consultar"}</span>
-            <a class="btn btn-accent btn-sm" href="contacto.html?codigo=${encodeURIComponent(p.codigoParte)}">Consultar</a>
+            <a class="btn btn-accent btn-sm" href="${esc(consultarParte(p))}" target="_blank" rel="noopener">Consultar</a>
           </div>
         </div>
       </article>
@@ -266,7 +275,7 @@ const UI = (() => {
       <td>${shown}${more || (shown ? "" : '<span class="text-muted-2 small">–</span>')}</td>
       <td class="text-end fw-bold text-nowrap">${p.precio != null ? money(p.precio) : "–"}</td>
       <td>${stockBadge(p)}</td>
-      <td class="text-end"><a class="btn btn-accent btn-sm" href="contacto.html?codigo=${encodeURIComponent(p.codigoParte)}">Consultar</a></td>
+      <td class="text-end"><a class="btn btn-accent btn-sm" href="${esc(consultarParte(p))}" target="_blank" rel="noopener">Consultar</a></td>
     </tr>`;
   }
 
@@ -298,5 +307,5 @@ const UI = (() => {
     });
   }
 
-  return { init, esc, money, fecha, parseDate, stateBox, stateRow, isLowStock, getTheme, applyTheme, toggleTheme, partCard, partRow, catIcon, CAT_ICONS, LOGO, notify, alertBox, confirmBox };
+  return { init, gmailLink, consultarParte, esc, money, fecha, parseDate, stateBox, stateRow, isLowStock, getTheme, applyTheme, toggleTheme, partCard, partRow, catIcon, CAT_ICONS, LOGO, notify, alertBox, confirmBox };
 })();

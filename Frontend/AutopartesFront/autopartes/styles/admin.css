@@ -38,5 +38,3 @@
 .assoc-model:hover { background: rgba(230, 57, 70, 0.08); }
 .assoc-model.active { background: rgba(230, 57, 70, 0.14); border-color: rgba(230, 57, 70, 0.4); }
 
-.ticket { padding: 1rem 1.25rem; }
-.ticket.resuelto { opacity: 0.65; }

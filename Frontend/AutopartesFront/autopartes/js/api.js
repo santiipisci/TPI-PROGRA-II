@@ -50,7 +50,6 @@ const Api = (() => {
     modelos: () => get("/modelos"),
     categorias: () => get("/categorias"),
     tiposCliente: () => get("/tipos-cliente"),
-    enviarConsulta: (dto) => post("/consultas", dto),
 
     /* --- Cuenta de cliente (tabla CLIENTE) --- */
     registrarCliente: (dto) => post("/clientes/registro", dto, { noRedirect: true }),
@@ -74,8 +73,5 @@ const Api = (() => {
     asociarAutoparte: (idModelo, idProducto) => put(`/modelos/${idModelo}/autopartes/${idProducto}`),
     desasociarAutoparte: (idModelo, idProducto) => del(`/modelos/${idModelo}/autopartes/${idProducto}`),
     crearModelo: (dto) => post("/modelos", dto),
-    consultas: () => get("/consultas"),
-    estadoConsulta: (id, estado) => patch(`/consultas/${id}/estado`, { estado }),
-    eliminarConsulta: (id) => del(`/consultas/${id}`),
   };
 })();

@@ -44,7 +44,7 @@ UI.init("modelos");
       ? list.map((p) => `
         <div class="list-group-item bg-transparent d-flex justify-content-between align-items-center gap-3">
           <div><div class="fw-semibold">${UI.esc(p.descripcion)}</div><div class="part-sku">${UI.esc(p.codigoParte)} · ${UI.esc(p.categoria)}</div></div>
-          <div class="text-end"><div class="fw-bold">${p.precio != null ? UI.money(p.precio) : "–"}</div><a class="small" href="contacto.html?codigo=${encodeURIComponent(p.codigoParte)}">Consultar</a></div>
+          <div class="text-end"><div class="fw-bold">${p.precio != null ? UI.money(p.precio) : "–"}</div><a class="small" href="${UI.esc(UI.consultarParte(p))}" target="_blank" rel="noopener">Consultar</a></div>
         </div>`).join("")
       : `<p class="text-muted-2 mb-0">Todavía no hay autopartes asociadas a este modelo.</p>`;
     modal.show();

@@ -13,6 +13,10 @@ public partial class Modelo
 
     public string Nombre { get; set; }
 
+    public short? AnioDesde { get; set; }
+
+    public short? AnioHasta { get; set; }
+
     public virtual Marca IdMarcaNavigation { get; set; }
 
     public virtual ICollection<Vehiculo> Vehiculos { get; set; } = new List<Vehiculo>();

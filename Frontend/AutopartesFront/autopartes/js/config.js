@@ -5,4 +5,6 @@
  */
 window.MX_CONFIG = {
   API_BASE: "https://localhost:7001/api",
+  // Casilla de la empresa: los botones "Consultar" abren Gmail con este destinatario ya cargado
+  EMPRESA_EMAIL: "ventas@motorix.example",
 };

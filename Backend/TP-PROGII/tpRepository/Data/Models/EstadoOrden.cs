@@ -12,4 +12,6 @@ public partial class EstadoOrden
     public string Descripcion { get; set; }
 
     public virtual ICollection<OrdenPedido> OrdenPedidos { get; set; } = new List<OrdenPedido>();
+
+    public virtual ICollection<SeguimientoOrden> Seguimientos { get; set; } = new List<SeguimientoOrden>();
 }

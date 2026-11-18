@@ -19,6 +19,8 @@ public partial class OrdenPedido
 
     public virtual ICollection<DetalleOrdenPedido> DetalleOrdenPedidos { get; set; } = new List<DetalleOrdenPedido>();
 
+    public virtual ICollection<SeguimientoOrden> Seguimientos { get; set; } = new List<SeguimientoOrden>();
+
     public virtual Factura Factura { get; set; }
 
     public virtual Cliente IdClienteNavigation { get; set; }

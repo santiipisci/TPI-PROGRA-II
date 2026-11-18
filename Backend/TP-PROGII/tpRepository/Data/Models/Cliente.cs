@@ -21,6 +21,10 @@ public partial class Cliente
 
     public string Email { get; set; }
 
+    public string ClaveHash { get; set; }
+
+    public DateTime FechaAlta { get; set; }
+
     public virtual ICollection<Factura> Facturas { get; set; } = new List<Factura>();
 
     public virtual TipoCliente IdTipoClienteNavigation { get; set; }

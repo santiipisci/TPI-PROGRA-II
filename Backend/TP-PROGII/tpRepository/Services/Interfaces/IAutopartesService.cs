@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+namespace tpRepository.Services.Interfaces;
 
-namespace tpRepository.Services.Interfaces
+public interface IAutopartesService
 {
-    public interface IAutopartesService
-    {
-    }
 }

@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using tpRepository.Repository.Interfaces;
+using tpRepository.Services.Interfaces;
 
-namespace tpRepository.Services.Implementations
+namespace tpRepository.Services.Implementations;
+
+public class AutopartesService : IAutopartesService
 {
-    public class AutopartesService
-    {
-    }
+    private readonly IAutopartesRepository _repo;
+
+    public AutopartesService(IAutopartesRepository repo) => _repo = repo;
 }

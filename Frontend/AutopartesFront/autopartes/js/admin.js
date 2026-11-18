@@ -20,10 +20,8 @@ function initAdmin() {
   let models = [];
   let cats = [];      // CATEGORIA_AUTOPARTE
   let estados = [];   // ESTADO_ORDEN
-  let tickets = [];
   let resumen = null;
   let selectedModel = null;
-  let ticketFilter = "todos";
   let charts = {};
 
   const fail = (title, e) => UI.alertBox("error", title, e.message || String(e));
@@ -387,63 +385,6 @@ function initAdmin() {
     }
   });
 
-  /* ---------- Soporte (consultas del formulario de contacto) ---------- */
-  function renderTickets() {
-    const open = tickets.filter((t) => t.estado === "abierto").length;
-    $("ticketBadge").textContent = open;
-    $("ticketBadge").classList.toggle("d-none", open === 0);
-    const list = tickets.filter((t) => ticketFilter === "todos" || t.estado === ticketFilter);
-    $("ticketList").innerHTML = list.length
-      ? list.map((t) => `
-      <div class="glass ticket ${t.estado}">
-        <div class="d-flex justify-content-between flex-wrap gap-2">
-          <div>
-            <span class="badge ${t.estado === "abierto" ? "text-bg-warning" : "text-bg-success"} me-2">${t.estado === "abierto" ? "Abierta" : "Resuelta"}</span>
-            <span class="badge text-bg-secondary">${UI.esc(t.tipoCliente)}</span>
-            <h3 class="h6 fw-bold mt-2 mb-1">${UI.esc(t.asunto)}</h3>
-          </div>
-          <div class="small text-muted-2">${UI.parseDate(t.fecha).toLocaleString("es-AR")}</div>
-        </div>
-        <p class="small mb-2" style="white-space:pre-wrap">${UI.esc(t.mensaje)}</p>
-        <div class="small text-muted-2 mb-3"><i class="bi bi-person me-1"></i>${UI.esc(t.nombre)} · <i class="bi bi-envelope ms-2 me-1"></i>${UI.esc(t.email)}${t.telefono ? ` · <i class="bi bi-telephone ms-2 me-1"></i>${UI.esc(t.telefono)}` : ""}</div>
-        <div class="d-flex gap-2">
-          <a class="btn btn-sm btn-accent" href="mailto:${encodeURIComponent(t.email)}?subject=${encodeURIComponent("Re: " + t.asunto)}"><i class="bi bi-reply me-1"></i>Responder</a>
-          <button class="btn btn-sm btn-glass" data-toggle="${t.idConsulta}">${t.estado === "abierto" ? "Marcar resuelta" : "Reabrir"}</button>
-          <button class="btn btn-sm btn-glass text-danger" data-remove="${t.idConsulta}"><i class="bi bi-trash"></i></button>
-        </div>
-      </div>`).join("")
-      : `<div class="glass p-4 text-center text-muted-2">No hay consultas para mostrar.</div>`;
-  }
-
-  $("ticketList").addEventListener("click", async (e) => {
-    const tg = e.target.closest("[data-toggle]");
-    const rm = e.target.closest("[data-remove]");
-    try {
-      if (tg) {
-        const t = tickets.find((x) => x.idConsulta === Number(tg.dataset.toggle));
-        if (!t) return;
-        const next = t.estado === "abierto" ? "resuelto" : "abierto";
-        await Api.estadoConsulta(t.idConsulta, next);
-        t.estado = next;
-      } else if (rm) {
-        const ok = await UI.confirmBox({ title: "¿Eliminar consulta?", text: "Esta acción no se puede deshacer.", confirmText: "Sí, eliminar", icon: "warning", danger: true });
-        if (!ok) return;
-        const id = Number(rm.dataset.remove);
-        await Api.eliminarConsulta(id);
-        tickets = tickets.filter((x) => x.idConsulta !== id);
-        UI.notify("success", "Consulta eliminada");
-      } else return;
-    } catch (err) { fail("No se pudo completar la acción", err); return; }
-    renderTickets();
-  });
-  $("ticketFilter").addEventListener("click", (e) => {
-    const b = e.target.closest("[data-f]");
-    if (!b) return;
-    ticketFilter = b.dataset.f;
-    document.querySelectorAll("#ticketFilter .btn").forEach((x) => x.classList.toggle("active", x === b));
-    renderTickets();
-  });
-
   /* ---------- Render global y carga inicial ---------- */
   function refreshParts() {
     renderKpis(); renderLowStock(); renderInventory(); renderAssocModels(); renderAssocParts();
@@ -481,8 +422,4 @@ function initAdmin() {
     loadHistory(true);
   })();
   loadResumen();
-  (async () => {
-    try { tickets = await Api.consultas(); } catch (e) { $("ticketList").innerHTML = `<div class="glass p-4 text-center text-danger">${UI.esc(e.message)}</div>`; return; }
-    renderTickets();
-  })();
 }
