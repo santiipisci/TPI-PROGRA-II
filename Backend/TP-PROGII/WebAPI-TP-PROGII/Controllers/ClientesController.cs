@@ -13,14 +13,17 @@ public class ClientesController : ControllerBase
 {
     private readonly IClienteService _service;
 
-    public ClientesController(IClienteService service) => _service = service;
+    public ClientesController(IClienteService service)
+    {
+        _service = service;
+    }
 
     [HttpPost("api/clientes/registro")]
     [AllowAnonymous]
     public async Task<IActionResult> Registro([FromBody] ClienteRegistroDto dto)
     {
         var id = await _service.RegistrarClienteAsync(dto);
-        return StatusCode(StatusCodes.Status201Created, new { idCliente = id });
+        return StatusCode(201, new { idCliente = id });
     }
 
     [HttpPost("api/clientes/login")]
@@ -33,19 +36,13 @@ public class ClientesController : ControllerBase
         {
             new(ClaimTypes.NameIdentifier, cliente.IdCliente.ToString()),
             new(ClaimTypes.Name, cliente.NombreRazonSocial),
-            new(ClaimTypes.Email, cliente.Email),
-            new(ClaimTypes.Role, "Cliente"),
         };
 
         var identity = new ClaimsIdentity(claims, AuthSchemes.Cliente);
         await HttpContext.SignInAsync(
             AuthSchemes.Cliente,
             new ClaimsPrincipal(identity),
-            new AuthenticationProperties
-            {
-                IsPersistent = true,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8),
-            });
+            new AuthenticationProperties { IsPersistent = true });
 
         return Ok(cliente);
     }
@@ -54,14 +51,13 @@ public class ClientesController : ControllerBase
     [Authorize(AuthenticationSchemes = AuthSchemes.Cliente)]
     public async Task<ActionResult<ClienteDto>> Me()
     {
-        var raw = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!int.TryParse(raw, out var id))
+        var id = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var cliente = await _service.GetClienteAsync(id);
+
+        if (cliente == null)
             return Unauthorized(new { mensaje = "La sesión no es válida." });
 
-        var cliente = await _service.GetClienteAsync(id);
-        return cliente == null
-            ? Unauthorized(new { mensaje = "La sesión no es válida." })
-            : Ok(cliente);
+        return Ok(cliente);
     }
 
     [HttpPost("api/clientes/logout")]

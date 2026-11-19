@@ -13,7 +13,10 @@ public class AuthController : ControllerBase
 {
     private readonly IAuthService _service;
 
-    public AuthController(IAuthService service) => _service = service;
+    public AuthController(IAuthService service)
+    {
+        _service = service;
+    }
 
     [HttpPost("api/auth/login")]
     [AllowAnonymous]
@@ -25,18 +28,13 @@ public class AuthController : ControllerBase
         {
             new(ClaimTypes.NameIdentifier, admin.IdUsuario.ToString()),
             new(ClaimTypes.Name, admin.Usuario),
-            new(ClaimTypes.Role, "Admin"),
         };
 
         var identity = new ClaimsIdentity(claims, AuthSchemes.Admin);
         await HttpContext.SignInAsync(
             AuthSchemes.Admin,
             new ClaimsPrincipal(identity),
-            new AuthenticationProperties
-            {
-                IsPersistent = true,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8),
-            });
+            new AuthenticationProperties { IsPersistent = true });
 
         return Ok(admin);
     }
@@ -45,10 +43,7 @@ public class AuthController : ControllerBase
     [Authorize(AuthenticationSchemes = AuthSchemes.Admin)]
     public async Task<ActionResult<AdminDto>> Me()
     {
-        var raw = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!int.TryParse(raw, out var id))
-            return Unauthorized(new { mensaje = "La sesión no es válida." });
-
+        var id = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         return Ok(await _service.GetAdminAsync(id));
     }
 

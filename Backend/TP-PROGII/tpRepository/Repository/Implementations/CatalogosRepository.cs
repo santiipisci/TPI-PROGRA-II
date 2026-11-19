@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using tpRepository.Dtos;
 using tpRepository.Models;
 using tpRepository.Repository.Interfaces;
@@ -14,9 +15,25 @@ public class CatalogosRepository : ICatalogosRepository
         _context = context;
     }
 
-    public Task<List<TipoClienteDto>> GetTiposClienteAsync() => throw new NotImplementedException();
+    public async Task<List<TipoClienteDto>> GetTiposClienteAsync()
+    {
+        return await _context.TipoClientes
+                     .OrderBy(t => t.Descripcion)
+                     .Select(t => new TipoClienteDto(t.IdTipoCliente, t.Descripcion))
+                     .ToListAsync();
+    }
 
-    public Task<List<EstadoOrdenDto>> GetEstadosOrdenAsync() => throw new NotImplementedException();
+    public async Task<List<EstadoOrdenDto>> GetEstadosOrdenAsync()
+    {
+        return await _context.EstadoOrdens
+                     .Select(e => new EstadoOrdenDto(e.IdEstadoOrden, e.Descripcion))
+                     .ToListAsync();
+    }
 
-    public Task<List<CategoriaDto>> GetCategoriasAsync() => throw new NotImplementedException();
+    public async Task<List<CategoriaDto>> GetCategoriasAsync()
+    {
+        return await _context.CategoriaAutopartes
+                     .Select(c => new CategoriaDto(c.IdCategoria, c.Nombre))
+                     .ToListAsync();
+    }
 }

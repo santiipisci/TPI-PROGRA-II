@@ -4,7 +4,7 @@
  * desde el origen donde se sirve este sitio (ver API_CONTRATO.md).
  */
 window.MX_CONFIG = {
-  API_BASE: "https://localhost:7001/api",
+  API_BASE: location.port === "5500" ? "https://localhost:7174/api" : "/api",
   // Casilla de la empresa: los botones "Consultar" abren Gmail con este destinatario ya cargado
   EMPRESA_EMAIL: "ventas@motorix.example",
 };

@@ -29,39 +29,49 @@ public class ClienteRepository : IClienteRepository
 
     public async Task<ClienteDto?> GetClienteAsync(int idCliente)
     {
-        var c = await _context.Clientes
-            .AsNoTracking()
-            .Include(x => x.IdTipoClienteNavigation)
-            .FirstOrDefaultAsync(x => x.IdCliente == idCliente);
-
-        return c == null ? null : MapCliente(c);
+        return await _context.Clientes
+                     .Where(c => c.IdCliente == idCliente)
+                     .Select(c => new ClienteDto(
+                        c.IdCliente,
+                        c.IdTipoCliente,
+                        c.NombreRazonSocial,
+                        c.DocumentoCuit,
+                        c.Telefono,
+                        c.Direccion,
+                        c.Email,
+                        c.IdTipoClienteNavigation.Descripcion))
+                     .FirstOrDefaultAsync();
     }
 
     public async Task<List<ClienteDto>> GetClientesAsync()
     {
-        var data = await _context.Clientes
-            .AsNoTracking()
-            .Include(c => c.IdTipoClienteNavigation)
-            .OrderBy(c => c.NombreRazonSocial)
-            .ToListAsync();
-
-        return data.Select(MapCliente).ToList();
+        return await _context.Clientes
+                     .OrderBy(c => c.NombreRazonSocial)
+                     .Select(c => new ClienteDto(
+                        c.IdCliente,
+                        c.IdTipoCliente,
+                        c.NombreRazonSocial,
+                        c.DocumentoCuit,
+                        c.Telefono,
+                        c.Direccion,
+                        c.Email,
+                        c.IdTipoClienteNavigation.Descripcion))
+                     .ToListAsync();
     }
 
     public async Task<int> RegistrarClienteAsync(ClienteRegistroDto dto, string claveHash)
     {
-        // Validación del tipo de cliente (antes la hacía el servicio con el catálogo).
         if (!await _context.TipoClientes.AnyAsync(t => t.IdTipoCliente == dto.IdTipoCliente))
             throw new BusinessException("El tipo de cliente indicado no existe.");
 
         var cliente = new Cliente
         {
             IdTipoCliente = dto.IdTipoCliente,
-            NombreRazonSocial = dto.NombreRazonSocial.Trim(),
-            DocumentoCuit = dto.DocumentoCuit.Trim(),
-            Telefono = string.IsNullOrWhiteSpace(dto.Telefono) ? null : dto.Telefono.Trim(),
-            Direccion = string.IsNullOrWhiteSpace(dto.Direccion) ? null : dto.Direccion.Trim(),
-            Email = dto.Email.Trim().ToLower(),
+            NombreRazonSocial = dto.NombreRazonSocial,
+            DocumentoCuit = dto.DocumentoCuit,
+            Telefono = dto.Telefono,
+            Direccion = dto.Direccion,
+            Email = dto.Email,
             ClaveHash = claveHash,
             FechaAlta = DateTime.Now,
         };
@@ -71,16 +81,4 @@ public class ClienteRepository : IClienteRepository
 
         return cliente.IdCliente;
     }
-
-    /* ======================================================================================= */
-
-    private static ClienteDto MapCliente(Cliente c) => new(
-        c.IdCliente,
-        c.IdTipoCliente,
-        c.NombreRazonSocial,
-        c.DocumentoCuit,
-        c.Telefono,
-        c.Direccion,
-        c.Email,
-        c.IdTipoClienteNavigation?.Descripcion ?? string.Empty);
 }

@@ -8,6 +8,7 @@ using tpRepository.Services.Implementations;
 using tpRepository.Services.Interfaces;
 using WebAPI_TP_PROGII.Middleware;
 using WebAPI_TP_PROGII.Security;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -93,6 +94,16 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+var frontPath = Path.GetFullPath(Path.Combine(
+    builder.Environment.ContentRootPath, "..", "..", "..",
+    "Frontend", "AutopartesFront", "autopartes"));
+
+if (Directory.Exists(frontPath))
+{
+    var front = new PhysicalFileProvider(frontPath);
+    app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = front });
+    app.UseStaticFiles(new StaticFileOptions { FileProvider = front });
+}
 
 app.UseCors("Front");
 

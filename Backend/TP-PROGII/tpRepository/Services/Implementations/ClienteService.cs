@@ -11,11 +11,14 @@ namespace tpRepository.Services.Implementations;
 public class ClienteService : IClienteService
 {
     private static readonly Regex EmailRegex =
-        new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled);
 
-    private readonly IClienteRepository _repo;
+    private readonly IClienteRepository _repository;
 
-    public ClienteService(IClienteRepository repo) => _repo = repo;
+    public ClienteService(IClienteRepository repository)
+    {
+        _repository = repository;
+    }
 
     public async Task<int> RegistrarClienteAsync(ClienteRegistroDto dto)
     {
@@ -32,12 +35,21 @@ public class ClienteService : IClienteService
         if (string.IsNullOrWhiteSpace(dto.Clave) || dto.Clave.Length < 6)
             throw new BusinessException("La clave debe tener al menos 6 caracteres.");
 
-        if (await _repo.GetClientePorEmailAsync(dto.Email) != null)
+        var limpio = dto with
+        {
+            NombreRazonSocial = dto.NombreRazonSocial.Trim(),
+            DocumentoCuit = dto.DocumentoCuit.Trim(),
+            Telefono = string.IsNullOrWhiteSpace(dto.Telefono) ? null : dto.Telefono.Trim(),
+            Direccion = string.IsNullOrWhiteSpace(dto.Direccion) ? null : dto.Direccion.Trim(),
+            Email = dto.Email.Trim().ToLower(),
+        };
+
+        if (await _repository.GetClientePorEmailAsync(limpio.Email) != null)
             throw new DuplicateException("Ya existe una cuenta con ese email.");
-        if (await _repo.GetClientePorDocumentoAsync(dto.DocumentoCuit) != null)
+        if (await _repository.GetClientePorDocumentoAsync(limpio.DocumentoCuit) != null)
             throw new DuplicateException("Ya existe un cliente con ese documento o CUIT.");
 
-        return await _repo.RegistrarClienteAsync(dto, PasswordHasher.Hash(dto.Clave));
+        return await _repository.RegistrarClienteAsync(dto, PasswordHasher.Hash(dto.Clave));
     }
 
     public async Task<ClienteDto> LoginClienteAsync(ClienteLoginDto dto)
@@ -45,15 +57,21 @@ public class ClienteService : IClienteService
         if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Clave))
             throw new UnauthorizedException("Email o clave incorrectos.");
 
-        var cliente = await _repo.GetClientePorEmailAsync(dto.Email);
+        var cliente = await _repository.GetClientePorEmailAsync(dto.Email);
         if (cliente == null || !PasswordHasher.Verify(dto.Clave, cliente.ClaveHash))
             throw new UnauthorizedException("Email o clave incorrectos.");
 
-        return await _repo.GetClienteAsync(cliente.IdCliente)
+        return await _repository.GetClienteAsync(cliente.IdCliente)
             ?? throw new UnauthorizedException("Email o clave incorrectos.");
     }
 
-    public Task<ClienteDto?> GetClienteAsync(int idCliente) => _repo.GetClienteAsync(idCliente);
+    public async Task<ClienteDto?> GetClienteAsync(int idCliente)
+    {
+        return await _repository.GetClienteAsync(idCliente);
+    }
 
-    public Task<List<ClienteDto>> GetClientesAsync() => _repo.GetClientesAsync();
+    public async Task<List<ClienteDto>> GetClientesAsync()
+    {
+        return await _repository.GetClientesAsync();
+    }
 }
