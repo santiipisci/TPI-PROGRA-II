@@ -92,7 +92,17 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// app.UseHttpsRedirection();
+app.UseHttpsRedirection();
+
+// Sirve el front (HTML/CSS/JS) desde la misma API: http://localhost:5000/
+var rutaFront = Path.GetFullPath(Path.Combine(
+    builder.Environment.ContentRootPath, "..", "..", "..", "Frontend", "AutopartesFront", "autopartes"));
+if (Directory.Exists(rutaFront))
+{
+    var archivosFront = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(rutaFront);
+    app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = archivosFront });
+    app.UseStaticFiles(new StaticFileOptions { FileProvider = archivosFront });
+}
 
 app.UseCors("Front");
 

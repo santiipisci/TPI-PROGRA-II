@@ -88,7 +88,7 @@ UI.init("partes");
   function render() {
     const list = parts.filter(matches);
     const isTable = view === "table";
-    grid.classList.toggle("d-none", isTable);
+    grid.classList.toggle("d-none", isTable || list.length === 0);
     tableWrap.classList.toggle("d-none", !isTable || list.length === 0);
     grid.innerHTML = isTable ? "" : list.map((p) => UI.partCard(p, models)).join("");
     tableBody.innerHTML = isTable ? list.map((p) => UI.partRow(p, models)).join("") : "";

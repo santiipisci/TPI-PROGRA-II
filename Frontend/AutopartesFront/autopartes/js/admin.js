@@ -447,7 +447,7 @@ function initAdmin() {
       cancelButtonText: "Cancelar",
       reverseButtons: true,
       buttonsStyling: false,
-      customClass: { confirmButton: "btn btn-accent mx-1", denyButton: "btn btn-danger mx-1", cancelButton: "btn btn-glass mx-1" },
+      customClass: { confirmButton: "btn btn-accent mx-1", denyButton: "btn btn-glass btn-swal-danger mx-1", cancelButton: "btn btn-glass mx-1" },
     }).then((result) => {
       if (result.isConfirmed) editModel(m);
       else if (result.isDenied) deleteModel(m);
