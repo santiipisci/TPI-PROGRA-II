@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using tpRepository.Common;
 using tpRepository.Dtos;
 using tpRepository.Models;
 using tpRepository.Repository.Interfaces;
@@ -13,17 +15,181 @@ public class AutopartesRepository : IAutopartesRepository
         _context = context;
     }
 
-    public Task<List<AutoparteDto>> GetAutopartesAsync() => throw new NotImplementedException();
+    public async Task<List<AutoparteDto>> GetAutopartesAsync()
+    {
+        var autopartes = await _context.Autopartes
+            .AsNoTracking()
+            .Include(a => a.IdCategoriaNavigation)
+            .Include(a => a.IdProductoNavigation)
+                .ThenInclude(p => p.PrecioProductos)
+            .Include(a => a.IdModelos)
+            .OrderBy(a => a.IdProductoNavigation.Descripcion)
+            .ToListAsync();
 
-    public Task<bool> ExisteCodigoAsync(string codigoParte) => throw new NotImplementedException();
+        return autopartes.Select(MapAutoparteDto).ToList();
+    }
 
-    public Task<bool> ExisteAutoparteAsync(int idProducto) => throw new NotImplementedException();
+    public Task<bool> ExisteCodigoAsync(string codigoParte)
+    {
+        var codigo = codigoParte.Trim();
+        return _context.Autopartes.AnyAsync(a => a.CodigoParte == codigo);
+    }
 
-    public Task<int> CrearAutoparteAsync(AutoparteCrearDto dto) => throw new NotImplementedException();
+    public Task<bool> ExisteAutoparteAsync(int idProducto) =>
+        _context.Autopartes.AnyAsync(a => a.IdProducto == idProducto);
 
-    public Task EditarAutoparteAsync(int idProducto, AutoparteEditarDto dto) => throw new NotImplementedException();
+    public async Task<int> CrearAutoparteAsync(AutoparteCrearDto dto)
+    {
+        if (await ExisteCodigoAsync(dto.CodigoParte))
+            throw new BusinessException("El código de parte ya existe.");
 
-    public Task ActualizarStockAsync(int idProducto, int stockActual) => throw new NotImplementedException();
+        var producto = new Producto
+        {
+            IdTipoProducto = 1, // Asumiendo que 1 es Autoparte
+            Descripcion = dto.Descripcion.Trim(),
+            Activo = true,
+        };
 
-    public Task EliminarAutoparteAsync(int idProducto) => throw new NotImplementedException();
+        _context.Productos.Add(producto);
+        await _context.SaveChangesAsync();
+
+        var autoparte = new Autoparte
+        {
+            IdProducto = producto.IdProducto,
+            IdCategoria = dto.IdCategoria,
+            CodigoParte = dto.CodigoParte.Trim(),
+            UnidadMedida = string.IsNullOrWhiteSpace(dto.UnidadMedida) ? null : dto.UnidadMedida.Trim(),
+            StockActual = dto.StockActual,
+            StockMinimo = dto.StockMinimo,
+        };
+
+        _context.Autopartes.Add(autoparte);
+
+        var precioProducto = new PrecioProducto
+        {
+            IdProducto = producto.IdProducto,
+            Precio = dto.Precio,
+            FechaDesde = DateOnly.FromDateTime(DateTime.Today),
+            FechaHasta = null,
+        };
+
+        _context.PrecioProductos.Add(precioProducto);
+        await _context.SaveChangesAsync();
+
+        return producto.IdProducto;
+    }
+
+    public async Task EditarAutoparteAsync(int idProducto, AutoparteEditarDto dto)
+    {
+        var autoparte = await _context.Autopartes
+            .Include(a => a.IdProductoNavigation)
+                .ThenInclude(p => p.PrecioProductos)
+            .FirstOrDefaultAsync(a => a.IdProducto == idProducto);
+
+        if (autoparte == null)
+            throw new NotFoundException("La autoparte no existe.");
+
+        autoparte.IdCategoria = dto.IdCategoria;
+        autoparte.IdProductoNavigation.Descripcion = dto.Descripcion.Trim();
+
+        // Actualizar precio: cerrar el precio actual y crear uno nuevo
+        var precioActual = autoparte.IdProductoNavigation.PrecioProductos
+            .FirstOrDefault(p => p.FechaHasta == null);
+
+        if (precioActual != null && precioActual.Precio != dto.Precio)
+        {
+            precioActual.FechaHasta = DateOnly.FromDateTime(DateTime.Today).AddDays(-1);
+
+            var nuevoPrecio = new PrecioProducto
+            {
+                IdProducto = idProducto,
+                Precio = dto.Precio,
+                FechaDesde = DateOnly.FromDateTime(DateTime.Today),
+                FechaHasta = null,
+            };
+
+            _context.PrecioProductos.Add(nuevoPrecio);
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task ActualizarStockAsync(int idProducto, int stockActual)
+    {
+        var autoparte = await _context.Autopartes.FirstOrDefaultAsync(a => a.IdProducto == idProducto);
+
+        if (autoparte == null)
+            throw new NotFoundException("La autoparte no existe.");
+
+        autoparte.StockActual = stockActual;
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task EliminarAutoparteAsync(int idProducto)
+    {
+        var autoparte = await _context.Autopartes
+            .Include(a => a.IdProductoNavigation)
+                .ThenInclude(p => p.DetalleOrdenPedidos)
+            .Include(a => a.IdProductoNavigation)
+                .ThenInclude(p => p.DetalleFacturas)
+            .Include(a => a.IdProductoNavigation)
+                .ThenInclude(p => p.PrecioProductos)
+            .Include(a => a.IdProductoNavigation)
+                .ThenInclude(p => p.Imagenes)
+            .Include(a => a.ProduccionAutopartes)
+            .FirstOrDefaultAsync(a => a.IdProducto == idProducto);
+
+        if (autoparte == null)
+            throw new NotFoundException("La autoparte no existe.");
+
+        if (autoparte.IdProductoNavigation.DetalleOrdenPedidos.Any() || 
+            autoparte.IdProductoNavigation.DetalleFacturas.Any())
+            throw new BusinessException("No se puede eliminar una autoparte que tiene órdenes o facturas asociadas.");
+
+        await using var tx = await _context.Database.BeginTransactionAsync();
+
+        // Eliminar relaciones many-to-many con modelos
+        autoparte.IdModelos.Clear();
+
+        // Eliminar datos relacionados
+        _context.ProduccionAutopartes.RemoveRange(autoparte.ProduccionAutopartes);
+        _context.PrecioProductos.RemoveRange(autoparte.IdProductoNavigation.PrecioProductos);
+        _context.ImagenProductos.RemoveRange(autoparte.IdProductoNavigation.Imagenes);
+
+        // Eliminar autoparte y producto
+        _context.Autopartes.Remove(autoparte);
+        _context.Productos.Remove(autoparte.IdProductoNavigation);
+
+        await _context.SaveChangesAsync();
+        await tx.CommitAsync();
+    }
+
+    /* ======================================================================================= */
+
+    private static AutoparteDto MapAutoparteDto(Autoparte a)
+    {
+        var precio = a.IdProductoNavigation.PrecioProductos
+            .Where(p => p.FechaHasta == null)
+            .OrderByDescending(p => p.FechaDesde)
+            .Select(p => p.Precio)
+            .FirstOrDefault();
+
+        var imagenUrl = a.IdProductoNavigation.Imagenes
+            .OrderBy(i => i.Orden)
+            .FirstOrDefault(i => i.EsPrincipal)
+            ?.UrlImagen;
+
+        return new AutoparteDto(
+            a.IdProducto,
+            a.CodigoParte,
+            a.IdProductoNavigation.Descripcion,
+            a.IdCategoria,
+            a.IdCategoriaNavigation.Nombre,
+            a.UnidadMedida ?? string.Empty,
+            precio,
+            a.StockActual,
+            a.StockMinimo,
+            imagenUrl,
+            a.IdModelos.Select(m => m.IdModelo).ToList());
+    }
 }

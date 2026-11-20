@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using tpRepository.Common;
 using tpRepository.Dtos;
 using tpRepository.Models;
 using tpRepository.Repository.Interfaces;
@@ -13,15 +15,155 @@ public class ModelosRepository : IModelosRepository
         _context = context;
     }
 
-    public Task<List<ModeloDto>> GetModelosAsync() => throw new NotImplementedException();
+    public async Task<List<ModeloDto>> GetModelosAsync()
+    {
+        var modelos = await _context.Modelos
+            .AsNoTracking()
+            .Include(m => m.IdMarcaNavigation)
+            .OrderBy(m => m.IdMarcaNavigation.Nombre)
+            .ThenBy(m => m.Nombre)
+            .ToListAsync();
 
-    public Task<bool> ExisteModeloAsync(string marca, string nombre) => throw new NotImplementedException();
+        return modelos.Select(m => new ModeloDto(
+            m.IdModelo,
+            m.IdMarca,
+            m.IdMarcaNavigation.Nombre,
+            m.Nombre,
+            m.AnioDesde,
+            m.AnioHasta)).ToList();
+    }
 
-    public Task<int> CrearModeloAsync(ModeloCrearDto dto) => throw new NotImplementedException();
+    public async Task<bool> ExisteModeloAsync(string marca, string nombre)
+    {
+        var nombreMarca = marca.Trim();
+        var nombreModelo = nombre.Trim();
 
-    public Task AsociarModeloAutoparteAsync(int idModelo, int idProducto) => throw new NotImplementedException();
+        return await _context.Modelos.AnyAsync(m =>
+            m.IdMarcaNavigation.Nombre == nombreMarca &&
+            m.Nombre == nombreModelo);
+    }
 
-    public Task DesasociarModeloAutoparteAsync(int idModelo, int idProducto) => throw new NotImplementedException();
+    public async Task<int> CrearModeloAsync(ModeloCrearDto dto)
+    {
+        var nombreMarca = dto.Marca.Trim();
+        var nombreModelo = dto.Nombre.Trim();
 
-    public Task<int> ActualizarCompatibilidadLoteAsync(CompatibilidadLoteDto dto) => throw new NotImplementedException();
+        if (await ExisteModeloAsync(nombreMarca, nombreModelo))
+            throw new BusinessException("El modelo ya existe para esa marca.");
+
+        var marca = await _context.Marcas.FirstOrDefaultAsync(m => m.Nombre == nombreMarca);
+
+        if (marca == null)
+        {
+            marca = new Marca { Nombre = nombreMarca };
+            _context.Marcas.Add(marca);
+            await _context.SaveChangesAsync();
+        }
+
+        var modelo = new Modelo
+        {
+            IdMarca = marca.IdMarca,
+            Nombre = nombreModelo,
+        };
+
+        _context.Modelos.Add(modelo);
+        await _context.SaveChangesAsync();
+
+        return modelo.IdModelo;
+    }
+
+    public async Task AsociarModeloAutoparteAsync(int idModelo, int idProducto)
+    {
+        var modelo = await _context.Modelos.FirstOrDefaultAsync(m => m.IdModelo == idModelo);
+        if (modelo == null)
+            throw new NotFoundException("El modelo no existe.");
+
+        var autoparte = await _context.Autopartes.FirstOrDefaultAsync(a => a.IdProducto == idProducto);
+        if (autoparte == null)
+            throw new NotFoundException("La autoparte no existe.");
+
+        if (modelo.IdProductos.Any(a => a.IdProducto == idProducto))
+            throw new BusinessException("La autoparte ya está asociada a este modelo.");
+
+        modelo.IdProductos.Add(autoparte);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DesasociarModeloAutoparteAsync(int idModelo, int idProducto)
+    {
+        var modelo = await _context.Modelos
+            .Include(m => m.IdProductos)
+            .FirstOrDefaultAsync(m => m.IdModelo == idModelo);
+
+        if (modelo == null)
+            throw new NotFoundException("El modelo no existe.");
+
+        var autoparte = modelo.IdProductos.FirstOrDefault(a => a.IdProducto == idProducto);
+        if (autoparte == null)
+            throw new BusinessException("La autoparte no está asociada a este modelo.");
+
+        modelo.IdProductos.Remove(autoparte);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<int> ActualizarCompatibilidadLoteAsync(CompatibilidadLoteDto dto)
+    {
+        var idModelos = dto.IdModelos ?? new List<int>();
+        var idProductos = dto.IdProductos ?? new List<int>();
+
+        if (idModelos.Count == 0 || idProductos.Count == 0)
+            return 0;
+
+        var modelos = await _context.Modelos
+            .Include(m => m.IdProductos)
+            .Where(m => idModelos.Contains(m.IdModelo))
+            .ToListAsync();
+
+        if (modelos.Count != idModelos.Count)
+            throw new BusinessException("Alguno de los modelos no existe.");
+
+        var autopartes = await _context.Autopartes
+            .Where(a => idProductos.Contains(a.IdProducto))
+            .ToListAsync();
+
+        if (autopartes.Count != idProductos.Count)
+            throw new BusinessException("Alguna de las autopartes no existe.");
+
+        var cambios = 0;
+
+        if (dto.Asociar)
+        {
+            foreach (var modelo in modelos)
+            {
+                foreach (var autoparte in autopartes)
+                {
+                    if (!modelo.IdProductos.Any(a => a.IdProducto == autoparte.IdProducto))
+                    {
+                        modelo.IdProductos.Add(autoparte);
+                        cambios++;
+                    }
+                }
+            }
+        }
+        else
+        {
+            foreach (var modelo in modelos)
+            {
+                var autopartesARemover = modelo.IdProductos
+                    .Where(a => idProductos.Contains(a.IdProducto))
+                    .ToList();
+
+                foreach (var autoparte in autopartesARemover)
+                {
+                    modelo.IdProductos.Remove(autoparte);
+                    cambios++;
+                }
+            }
+        }
+
+        if (cambios > 0)
+            await _context.SaveChangesAsync();
+
+        return cambios;
+    }
 }
