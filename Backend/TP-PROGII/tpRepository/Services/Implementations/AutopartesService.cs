@@ -32,6 +32,8 @@ public class AutopartesService : IAutopartesService
             throw new BusinessException("El stock actual no puede ser negativo.");
         if (dto.StockMinimo < 0)
             throw new BusinessException("El stock mínimo no puede ser negativo.");
+        if (!string.IsNullOrWhiteSpace(dto.ImagenUrl) && dto.ImagenUrl.Trim().Length > 255)
+            throw new BusinessException("La URL de la imagen no puede superar los 255 caracteres.");
 
         return await _repo.CrearAutoparteAsync(dto);
     }
@@ -46,6 +48,8 @@ public class AutopartesService : IAutopartesService
             throw new BusinessException("La categoría es obligatoria y debe ser válida.");
         if (dto.Precio <= 0)
             throw new BusinessException("El precio debe ser mayor a 0.");
+        if (!string.IsNullOrWhiteSpace(dto.ImagenUrl) && dto.ImagenUrl.Trim().Length > 255)
+            throw new BusinessException("La URL de la imagen no puede superar los 255 caracteres.");
 
         await _repo.EditarAutoparteAsync(idProducto, dto);
     }

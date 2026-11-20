@@ -31,6 +31,7 @@ public class ModelosService : IModelosService
             throw new BusinessException("El nombre del modelo es obligatorio.");
         if (dto.Nombre.Trim().Length > 50)
             throw new BusinessException("El nombre del modelo no puede superar los 50 caracteres.");
+        ValidarAnios(dto.AnioDesde, dto.AnioHasta);
 
         return await _repository.CrearModeloAsync(dto);
     }
@@ -45,8 +46,22 @@ public class ModelosService : IModelosService
             throw new BusinessException("El nombre del modelo es obligatorio.");
         if (dto.Nombre.Trim().Length > 50)
             throw new BusinessException("El nombre del modelo no puede superar los 50 caracteres.");
+        ValidarAnios(dto.AnioDesde, dto.AnioHasta);
 
         await _repository.EditarModeloAsync(id, dto);
+    }
+
+    private static void ValidarAnios(short? desde, short? hasta)
+    {
+        if (desde.HasValue != hasta.HasValue)
+            throw new BusinessException("Debe indicar el año desde y el año hasta, o dejar ambos vacíos.");
+        if (desde.HasValue)
+        {
+            if (desde.Value < 1900 || hasta!.Value < 1900)
+                throw new BusinessException("Los años deben ser mayores o iguales a 1900.");
+            if (hasta.Value < desde.Value)
+                throw new BusinessException("El año hasta no puede ser menor que el año desde.");
+        }
     }
 
     public async Task EliminarModeloAsync(int id)

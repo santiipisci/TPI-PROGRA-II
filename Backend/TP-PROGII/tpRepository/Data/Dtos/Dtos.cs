@@ -65,15 +65,16 @@ public record AutoparteCrearDto(
     string? UnidadMedida,
     decimal Precio,
     int StockActual,
-    int StockMinimo);
+    int StockMinimo,
+    string? ImagenUrl);
 
-public record AutoparteEditarDto(string Descripcion, int IdCategoria, decimal Precio);
+public record AutoparteEditarDto(string Descripcion, int IdCategoria, decimal Precio, string? ImagenUrl);
 
 public record StockDto(int StockActual);
 
-public record ModeloCrearDto(string Marca, string Nombre);
+public record ModeloCrearDto(string Marca, string Nombre, short? AnioDesde, short? AnioHasta);
 
-public record ModeloEditarDto(string Marca, string Nombre);
+public record ModeloEditarDto(string Marca, string Nombre, short? AnioDesde, short? AnioHasta);
 
 public record VentaMesDto(int Anio, int Mes, decimal Total);
 

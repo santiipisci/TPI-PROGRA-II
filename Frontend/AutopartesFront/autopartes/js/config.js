@@ -4,7 +4,7 @@
  * desde el origen donde se sirve este sitio (ver API_CONTRATO.md).
  */
 window.MX_CONFIG = {
-  API_BASE: "http://localhost:5000/api",
+  API_BASE: "https://localhost:7174/api",
   // Casilla de la empresa: los botones "Consultar" abren Gmail con este destinatario ya cargado
   EMPRESA_EMAIL: "ventas@motorix.example",
 };

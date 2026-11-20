@@ -22,6 +22,8 @@ public class AutopartesRepository : IAutopartesRepository
             .Include(a => a.IdCategoriaNavigation)
             .Include(a => a.IdProductoNavigation)
                 .ThenInclude(p => p.PrecioProductos)
+            .Include(a => a.IdProductoNavigation)
+                .ThenInclude(p => p.Imagenes)
             .Include(a => a.IdModelos)
             .OrderBy(a => a.IdProductoNavigation.Descripcion)
             .ToListAsync();
@@ -74,6 +76,19 @@ public class AutopartesRepository : IAutopartesRepository
         };
 
         _context.PrecioProductos.Add(precioProducto);
+
+        var imagenUrl = string.IsNullOrWhiteSpace(dto.ImagenUrl) ? null : dto.ImagenUrl.Trim();
+        if (imagenUrl != null)
+        {
+            _context.ImagenProductos.Add(new ImagenProducto
+            {
+                IdProducto = producto.IdProducto,
+                UrlImagen = imagenUrl,
+                EsPrincipal = true,
+                Orden = 1,
+            });
+        }
+
         await _context.SaveChangesAsync();
 
         return producto.IdProducto;
@@ -84,6 +99,8 @@ public class AutopartesRepository : IAutopartesRepository
         var autoparte = await _context.Autopartes
             .Include(a => a.IdProductoNavigation)
                 .ThenInclude(p => p.PrecioProductos)
+            .Include(a => a.IdProductoNavigation)
+                .ThenInclude(p => p.Imagenes)
             .FirstOrDefaultAsync(a => a.IdProducto == idProducto);
 
         if (autoparte == null)
@@ -91,6 +108,34 @@ public class AutopartesRepository : IAutopartesRepository
 
         autoparte.IdCategoria = dto.IdCategoria;
         autoparte.IdProductoNavigation.Descripcion = dto.Descripcion.Trim();
+
+        var imagenUrl = string.IsNullOrWhiteSpace(dto.ImagenUrl) ? null : dto.ImagenUrl.Trim();
+        var imagenPrincipal = autoparte.IdProductoNavigation.Imagenes
+            .OrderBy(i => i.Orden)
+            .FirstOrDefault(i => i.EsPrincipal)
+            ?? autoparte.IdProductoNavigation.Imagenes.OrderBy(i => i.Orden).FirstOrDefault();
+
+        if (imagenUrl == null)
+        {
+            if (imagenPrincipal != null)
+                _context.ImagenProductos.Remove(imagenPrincipal);
+        }
+        else if (imagenPrincipal == null)
+        {
+            _context.ImagenProductos.Add(new ImagenProducto
+            {
+                IdProducto = idProducto,
+                UrlImagen = imagenUrl,
+                EsPrincipal = true,
+                Orden = 1,
+            });
+        }
+        else
+        {
+            imagenPrincipal.UrlImagen = imagenUrl;
+            imagenPrincipal.EsPrincipal = true;
+            if (imagenPrincipal.Orden == 0) imagenPrincipal.Orden = 1;
+        }
 
         var hoy = DateOnly.FromDateTime(DateTime.Today);
         var precioActual = autoparte.IdProductoNavigation.PrecioProductos

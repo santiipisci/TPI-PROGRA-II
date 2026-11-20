@@ -30,8 +30,21 @@
               <div class="col-md-6"><label class="form-label" for="rTel">Teléfono</label><input id="rTel" type="tel" inputmode="numeric" pattern="[0-9]{7,15}" class="form-control" required maxlength="15" autocomplete="tel"></div>
               <div class="col-12"><label class="form-label" for="rDir">Dirección</label><input id="rDir" class="form-control" required maxlength="150" autocomplete="street-address"></div>
               <div class="col-12"><label class="form-label" for="rEmail">Email</label><input id="rEmail" type="email" class="form-control" required maxlength="100" autocomplete="email"></div>
-              <div class="col-md-6"><label class="form-label" for="rClave">Contraseña</label><input id="rClave" type="password" class="form-control" required minlength="8" autocomplete="new-password"><div class="form-text">Mínimo 8 caracteres.</div></div>
-              <div class="col-md-6"><label class="form-label" for="rClave2">Repetir contraseña</label><input id="rClave2" type="password" class="form-control" required autocomplete="new-password"></div>
+              <div class="col-md-6">
+                <label class="form-label" for="rClave">Contraseña</label>
+                <div class="input-group">
+                  <input id="rClave" type="password" class="form-control" required minlength="8" autocomplete="new-password">
+                  <button class="btn btn-glass password-toggle" type="button" aria-label="Mostrar contraseña"><i class="bi bi-eye"></i></button>
+                </div>
+                <div class="form-text">Mínimo 8 caracteres.</div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="rClave2">Repetir contraseña</label>
+                <div class="input-group">
+                  <input id="rClave2" type="password" class="form-control" required autocomplete="new-password">
+                  <button class="btn btn-glass password-toggle" type="button" aria-label="Mostrar contraseña"><i class="bi bi-eye"></i></button>
+                </div>
+              </div>
               <div class="col-12"><button class="btn btn-accent w-100 btn-lg" type="submit">Crear cuenta</button></div>
             </div>
             <p class="small text-muted-2 text-center mt-3 mb-0">¿Ya tenés cuenta? <a href="iniciar-sesion.html">Iniciá sesión</a></p>

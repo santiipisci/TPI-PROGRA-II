@@ -303,6 +303,7 @@ function initAdmin() {
   $("invCat").addEventListener("change", renderInventory);
 
   async function editPart(p) {
+    const img = p.imagenUrl || "";
     const { value } = await Swal.fire({
       title: "Editar autoparte",
       html: `
@@ -313,8 +314,14 @@ function initAdmin() {
           <label class="form-label small" for="epCat">Categoría</label>
           <select id="epCat" class="form-select mb-3">${catOptions(p.idCategoria)}</select>
           <label class="form-label small" for="epPrecio">Precio vigente (ARS)</label>
-          <input id="epPrecio" type="number" min="0" step="0.01" class="form-control" value="${p.precio ?? ""}">
-          <div class="form-text">Al cambiar el precio, el sistema registra uno nuevo en el historial de precios.</div>
+          <input id="epPrecio" type="number" min="0" step="0.01" class="form-control mb-3" value="${p.precio ?? ""}">
+          <label class="form-label small" for="epImagen">Imagen (URL)</label>
+          <input id="epImagen" type="url" class="form-control mb-2" maxlength="255" value="${UI.esc(img)}" placeholder="https://...">
+          <div class="mb-3 text-center">
+            <img id="epPreview" src="${UI.esc(img)}" alt="Vista previa" class="img-fluid rounded ${img ? "" : "d-none"}" style="max-height: 160px; object-fit: contain;">
+            <div id="epPreviewEmpty" class="small text-muted-2 ${img ? "d-none" : ""}">Sin imagen para mostrar</div>
+          </div>
+          <div class="form-text">Al cambiar el precio, el sistema registra uno nuevo en el historial de precios. Si dejás la URL vacía, se quitará la imagen.</div>
         </div>`,
       showCancelButton: true,
       confirmButtonText: "Guardar cambios",
@@ -323,14 +330,29 @@ function initAdmin() {
       buttonsStyling: false,
       focusConfirm: false,
       customClass: { confirmButton: "btn btn-accent mx-1", cancelButton: "btn btn-glass mx-1" },
+      didOpen: () => {
+        const input = document.getElementById("epImagen");
+        const preview = document.getElementById("epPreview");
+        const empty = document.getElementById("epPreviewEmpty");
+        const showEmpty = () => { preview.classList.add("d-none"); empty.classList.remove("d-none"); };
+        const showPreview = (url) => { preview.src = url; preview.classList.remove("d-none"); empty.classList.add("d-none"); };
+        preview.onerror = showEmpty;
+        preview.onload = () => { if (preview.src) { preview.classList.remove("d-none"); empty.classList.add("d-none"); } };
+        input.addEventListener("input", () => {
+          const url = input.value.trim();
+          if (!url) { preview.removeAttribute("src"); showEmpty(); }
+          else { showPreview(url); }
+        });
+      },
       preConfirm: () => {
         const descripcion = document.getElementById("epNombre").value.trim();
         const idCategoria = Number(document.getElementById("epCat").value);
         const raw = document.getElementById("epPrecio").value;
         const precio = Number(raw);
+        const imagenUrl = document.getElementById("epImagen").value.trim() || null;
         if (!descripcion) { Swal.showValidationMessage("La descripción no puede estar vacía."); return false; }
         if (raw === "" || !Number.isFinite(precio) || precio <= 0) { Swal.showValidationMessage("Ingresá un precio válido (mayor a 0)."); return false; }
-        return { descripcion, idCategoria, precio };
+        return { descripcion, idCategoria, precio, imagenUrl };
       },
     });
     if (!value) return;
@@ -373,6 +395,7 @@ function initAdmin() {
       precio: Number($("npPrecio").value),
       stockActual: Math.max(0, parseInt($("npStock").value, 10) || 0),
       stockMinimo: Math.max(0, parseInt($("npMin").value, 10) || 0),
+      imagenUrl: $("npImagen").value.trim() || null,
     };
     if (!(dto.precio > 0)) { UI.alertBox("warning", "Precio inválido", "El precio debe ser mayor a 0."); return; }
     const btn = form.querySelector('[type="submit"]');
@@ -450,7 +473,14 @@ function initAdmin() {
   $("modelForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const form = e.target;
-    const dto = { marca: $("nmMarca").value.trim(), nombre: $("nmModelo").value.trim() };
+    const anioDesdeRaw = $("nmAnioDesde").value;
+    const anioHastaRaw = $("nmAnioHasta").value;
+    const dto = {
+      marca: $("nmMarca").value.trim(),
+      nombre: $("nmModelo").value.trim(),
+      anioDesde: anioDesdeRaw === "" ? null : Number(anioDesdeRaw),
+      anioHasta: anioHastaRaw === "" ? null : Number(anioHastaRaw),
+    };
     if (!dto.marca || !dto.nombre) return;
     const btn = form.querySelector('[type="submit"]');
     btn.disabled = true;
@@ -477,6 +507,16 @@ function initAdmin() {
           <input id="emMarca" class="form-control mb-3" maxlength="50" value="${UI.esc(m.marca)}">
           <label class="form-label small" for="emNombre">Modelo</label>
           <input id="emNombre" class="form-control mb-3" maxlength="50" value="${UI.esc(m.nombre)}">
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label small" for="emAnioDesde">Año desde</label>
+              <input id="emAnioDesde" type="number" min="1900" max="2100" class="form-control mb-3" value="${m.anioDesde ?? ""}">
+            </div>
+            <div class="col-6">
+              <label class="form-label small" for="emAnioHasta">Año hasta</label>
+              <input id="emAnioHasta" type="number" min="1900" max="2100" class="form-control mb-3" value="${m.anioHasta ?? ""}">
+            </div>
+          </div>
         </div>`,
       showCancelButton: true,
       confirmButtonText: "Guardar cambios",
@@ -488,8 +528,12 @@ function initAdmin() {
       preConfirm: () => {
         const marca = document.getElementById("emMarca").value.trim();
         const nombre = document.getElementById("emNombre").value.trim();
+        const anioDesdeRaw = document.getElementById("emAnioDesde").value;
+        const anioHastaRaw = document.getElementById("emAnioHasta").value;
+        const anioDesde = anioDesdeRaw === "" ? null : Number(anioDesdeRaw);
+        const anioHasta = anioHastaRaw === "" ? null : Number(anioHastaRaw);
         if (!marca || !nombre) { Swal.showValidationMessage("Marca y modelo son obligatorios."); return false; }
-        return { marca, nombre };
+        return { marca, nombre, anioDesde, anioHasta };
       },
     });
     if (!value) return;

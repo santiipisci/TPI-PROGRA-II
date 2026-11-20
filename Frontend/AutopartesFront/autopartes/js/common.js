@@ -126,6 +126,7 @@ const UI = (() => {
     { id: "partes", href: "partes.html", label: "Partes en venta" },
     { id: "modelos", href: "modelos.html", label: "Modelos de autos" },
     { id: "contacto", href: "contacto.html", label: "Contacto" },
+    { id: "acerca", href: "acerca.html", label: "Acerca de" },
   ];
 
   function renderHeader(active) {
@@ -304,6 +305,17 @@ const UI = (() => {
     applyTheme(getTheme());
     document.addEventListener("click", (e) => {
       if (e.target.closest(".theme-toggle")) toggleTheme();
+
+      const toggle = e.target.closest(".password-toggle");
+      if (toggle) {
+        const input = toggle.closest(".input-group")?.querySelector("input");
+        if (!input) return;
+        const show = input.type === "password";
+        input.type = show ? "text" : "password";
+        toggle.setAttribute("aria-label", show ? "Ocultar contraseña" : "Mostrar contraseña");
+        const icon = toggle.querySelector("i");
+        if (icon) icon.className = show ? "bi bi-eye-slash" : "bi bi-eye";
+      }
     });
   }
 

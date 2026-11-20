@@ -64,6 +64,8 @@ public class ModelosRepository : IModelosRepository
         {
             IdMarca = marca.IdMarca,
             Nombre = nombreModelo,
+            AnioDesde = dto.AnioDesde,
+            AnioHasta = dto.AnioHasta,
         };
 
         _context.Modelos.Add(modelo);
@@ -98,6 +100,8 @@ public class ModelosRepository : IModelosRepository
 
         modelo.IdMarca = marca.IdMarca;
         modelo.Nombre = nombreModelo;
+        modelo.AnioDesde = dto.AnioDesde;
+        modelo.AnioHasta = dto.AnioHasta;
 
         await _context.SaveChangesAsync();
     }
