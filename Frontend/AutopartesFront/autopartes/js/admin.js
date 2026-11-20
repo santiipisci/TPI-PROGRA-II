@@ -385,6 +385,75 @@ function initAdmin() {
     }
   });
 
+  async function editModel(m) {
+    const { value } = await Swal.fire({
+      title: "Editar modelo",
+      html: `
+        <div class="text-start">
+          <label class="form-label small" for="emMarca">Marca</label>
+          <input id="emMarca" class="form-control mb-3" maxlength="50" value="${UI.esc(m.marca)}">
+          <label class="form-label small" for="emNombre">Modelo</label>
+          <input id="emNombre" class="form-control mb-3" maxlength="50" value="${UI.esc(m.nombre)}">
+        </div>`,
+      showCancelButton: true,
+      confirmButtonText: "Guardar cambios",
+      cancelButtonText: "Cancelar",
+      reverseButtons: true,
+      buttonsStyling: false,
+      focusConfirm: false,
+      customClass: { confirmButton: "btn btn-accent mx-1", cancelButton: "btn btn-glass mx-1" },
+      preConfirm: () => {
+        const marca = document.getElementById("emMarca").value.trim();
+        const nombre = document.getElementById("emNombre").value.trim();
+        if (!marca || !nombre) { Swal.showValidationMessage("Marca y modelo son obligatorios."); return false; }
+        return { marca, nombre };
+      },
+    });
+    if (!value) return;
+    try {
+      await Api.editarModelo(m.idModelo, value);
+    } catch (e) { fail("No se pudo guardar el modelo", e); return; }
+    models = await Api.modelos();
+    selectedModel = m.idModelo;
+    renderAssocModels(); renderAssocParts();
+    UI.notify("success", "Modelo actualizado");
+  }
+
+  async function deleteModel(m) {
+    const ok = await UI.confirmBox({ title: "¿Eliminar el modelo?", text: `Se eliminará "${m.marca} ${m.nombre}" y sus asociaciones con autopartes.`, confirmText: "Sí, eliminar", icon: "warning", danger: true });
+    if (!ok) return;
+    try {
+      await Api.eliminarModelo(m.idModelo);
+    } catch (err) { fail("No se pudo eliminar el modelo", err); return; }
+    models = await Api.modelos();
+    selectedModel = models[0] ? models[0].idModelo : null;
+    renderAssocModels(); renderAssocParts();
+    UI.notify("success", "Modelo eliminado");
+  }
+
+  $("assocModels").addEventListener("contextmenu", (e) => {
+    const el = e.target.closest(".assoc-model");
+    if (!el) return;
+    e.preventDefault();
+    const idModelo = Number(el.dataset.id);
+    const m = models.find((x) => x.idModelo === idModelo);
+    if (!m) return;
+    Swal.fire({
+      title: `${m.marca} ${m.nombre}`,
+      showDenyButton: true,
+      showCancelButton: true,
+      confirmButtonText: "Editar",
+      denyButtonText: "Eliminar",
+      cancelButtonText: "Cancelar",
+      reverseButtons: true,
+      buttonsStyling: false,
+      customClass: { confirmButton: "btn btn-accent mx-1", denyButton: "btn btn-danger mx-1", cancelButton: "btn btn-glass mx-1" },
+    }).then((result) => {
+      if (result.isConfirmed) editModel(m);
+      else if (result.isDenied) deleteModel(m);
+    });
+  });
+
   /* ---------- Render global y carga inicial ---------- */
   function refreshParts() {
     renderKpis(); renderLowStock(); renderInventory(); renderAssocModels(); renderAssocParts();

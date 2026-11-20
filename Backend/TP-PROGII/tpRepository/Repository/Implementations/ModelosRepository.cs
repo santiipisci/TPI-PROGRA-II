@@ -72,6 +72,44 @@ public class ModelosRepository : IModelosRepository
         return modelo.IdModelo;
     }
 
+    public async Task EditarModeloAsync(int id, ModeloEditarDto dto)
+    {
+        var modelo = await _context.Modelos.FirstOrDefaultAsync(m => m.IdModelo == id);
+        if (modelo == null)
+            throw new NotFoundException("El modelo no existe.");
+
+        var nombreMarca = dto.Marca.Trim();
+        var nombreModelo = dto.Nombre.Trim();
+
+        if (await ExisteModeloAsync(nombreMarca, nombreModelo) && 
+            (modelo.Nombre != nombreModelo || modelo.IdMarcaNavigation.Nombre != nombreMarca))
+            throw new BusinessException("El modelo ya existe para esa marca.");
+
+        var marca = await _context.Marcas.FirstOrDefaultAsync(m => m.Nombre == nombreMarca);
+
+        if (marca == null)
+        {
+            marca = new Marca { Nombre = nombreMarca };
+            _context.Marcas.Add(marca);
+            await _context.SaveChangesAsync();
+        }
+
+        modelo.IdMarca = marca.IdMarca;
+        modelo.Nombre = nombreModelo;
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task EliminarModeloAsync(int id)
+    {
+        var modelo = await _context.Modelos.FirstOrDefaultAsync(m => m.IdModelo == id);
+        if (modelo == null)
+            throw new NotFoundException("El modelo no existe.");
+
+        _context.Modelos.Remove(modelo);
+        await _context.SaveChangesAsync();
+    }
+
     public async Task AsociarModeloAutoparteAsync(int idModelo, int idProducto)
     {
         var modelo = await _context.Modelos.FirstOrDefaultAsync(m => m.IdModelo == idModelo);

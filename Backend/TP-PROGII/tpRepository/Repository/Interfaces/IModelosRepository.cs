@@ -13,6 +13,8 @@ namespace tpRepository.Repository.Interfaces
         Task<List<ModeloDto>> GetModelosAsync();
         Task<bool> ExisteModeloAsync(string marca, string nombre);
         Task<int> CrearModeloAsync(ModeloCrearDto dto);
+        Task EditarModeloAsync(int id, ModeloEditarDto dto);
+        Task EliminarModeloAsync(int id);
         Task AsociarModeloAutoparteAsync(int idModelo, int idProducto);
         Task DesasociarModeloAutoparteAsync(int idModelo, int idProducto);
         Task<int> ActualizarCompatibilidadLoteAsync(CompatibilidadLoteDto dto);
