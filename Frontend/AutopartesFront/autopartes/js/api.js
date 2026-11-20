@@ -73,5 +73,7 @@ const Api = (() => {
     asociarAutoparte: (idModelo, idProducto) => put(`/modelos/${idModelo}/autopartes/${idProducto}`),
     desasociarAutoparte: (idModelo, idProducto) => del(`/modelos/${idModelo}/autopartes/${idProducto}`),
     crearModelo: (dto) => post("/modelos", dto),
+    editarModelo: (id, dto) => put(`/modelos/${id}`, dto),
+    eliminarModelo: (id) => del(`/modelos/${id}`),
   };
 })();
