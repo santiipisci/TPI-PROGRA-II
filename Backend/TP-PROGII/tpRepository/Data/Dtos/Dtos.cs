@@ -73,6 +73,8 @@ public record StockDto(int StockActual);
 
 public record ModeloCrearDto(string Marca, string Nombre);
 
+public record ModeloEditarDto(string Marca, string Nombre);
+
 public record VentaMesDto(int Anio, int Mes, decimal Total);
 
 public record OrdenEstadoCantidadDto(string Estado, int Cantidad);
