@@ -5,7 +5,7 @@ UI.init("");
 
 (async () => {
   const $ = (id) => document.getElementById(id);
-  Animations.init([[".mtx-glass.p-4", "zoom", 0]]);
+  Animations.init([[".glass.p-4", "zoom", 0]]);
 
   $("rTel").addEventListener("input", (e) => { e.target.value = e.target.value.replace(/\D/g, ""); });
 

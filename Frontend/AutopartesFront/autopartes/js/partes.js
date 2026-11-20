@@ -46,12 +46,12 @@ UI.init("partes");
   const cats = [...new Set(parts.map((p) => p.categoria))].sort();
   function renderCats() {
     catsEl.innerHTML = ["", ...cats]
-      .map((c) => `<button type="button" class="mtx-cat-chip ${c === categoria ? "active" : ""}" data-cat="${UI.esc(c)}">${c ? `${UI.catIcon(c, "me-1")}${UI.esc(c)}` : "Todas"}</button>`)
+      .map((c) => `<button type="button" class="cat-chip ${c === categoria ? "active" : ""}" data-cat="${UI.esc(c)}">${c ? `${UI.catIcon(c, "me-1")}${UI.esc(c)}` : "Todas"}</button>`)
       .join("");
   }
   renderCats();
   catsEl.addEventListener("click", (e) => {
-    const b = e.target.closest(".mtx-cat-chip");
+    const b = e.target.closest(".cat-chip");
     if (!b) return;
     categoria = b.dataset.cat;
     renderCats();
@@ -116,7 +116,7 @@ UI.init("partes");
   render();
   Animations.init([
     ["main > .mb-4", "up", 0],
-    [".mtx-filter-bar", "up", 0],
+    [".filter-bar", "up", 0],
     ["#partsGrid > *", "up", 70],
   ]);
 })();

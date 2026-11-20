@@ -58,7 +58,7 @@ const UI = (() => {
 
   function catIcon(cat, extraClass = "") {
     if (CAT_SVG[cat]) {
-      return `<svg class="mtx-cat-svg ${extraClass}" viewBox="0 0 64 64" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${CAT_SVG[cat]}</svg>`;
+      return `<svg class="cat-svg ${extraClass}" viewBox="0 0 64 64" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${CAT_SVG[cat]}</svg>`;
     }
     return `<i class="bi ${CAT_ICONS[cat] || "bi-gear"} ${extraClass}"></i>`;
   }
@@ -75,9 +75,9 @@ const UI = (() => {
 
   // Bloques de estado para contenedores que se cargan desde la API
   const stateBox = (msg, kind = "muted") =>
-    `<div class="col-12"><div class="mtx-glass p-4 text-center ${kind === "error" ? "text-danger" : "mtx-text-muted-2"}">${kind === "error" ? '<i class="bi bi-exclamation-triangle me-2"></i>' : ""}${esc(msg)}</div></div>`;
+    `<div class="col-12"><div class="glass p-4 text-center ${kind === "error" ? "text-danger" : "text-muted-2"}">${kind === "error" ? '<i class="bi bi-exclamation-triangle me-2"></i>' : ""}${esc(msg)}</div></div>`;
   const stateRow = (cols, msg, kind = "muted") =>
-    `<tr><td colspan="${cols}" class="${kind === "error" ? "text-danger" : "mtx-text-muted-2"}">${esc(msg)}</td></tr>`;
+    `<tr><td colspan="${cols}" class="${kind === "error" ? "text-danger" : "text-muted-2"}">${esc(msg)}</td></tr>`;
 
   // Abre Gmail en una pestaña nueva con el redactor listo y el mail de la empresa como destinatario
   function gmailLink(asunto = "", cuerpo = "") {
@@ -95,7 +95,7 @@ const UI = (() => {
   }
   function applyTheme(t) {
     document.documentElement.setAttribute("data-bs-theme", t);
-    document.querySelectorAll(".mtx-theme-toggle i").forEach((i) => {
+    document.querySelectorAll(".theme-toggle i").forEach((i) => {
       i.className = t === "dark" ? "bi bi-sun-fill" : "bi bi-moon-stars-fill";
     });
   }
@@ -110,7 +110,7 @@ const UI = (() => {
 
   /* ---------- Logo ---------- */
   const LOGO = `
-    <svg class="mtx-brand-logo" viewBox="0 0 48 48" aria-hidden="true">
+    <svg class="brand-logo" viewBox="0 0 48 48" aria-hidden="true">
       <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0" stop-color="#e63946"/><stop offset="1" stop-color="#ff7b00"/></linearGradient></defs>
       <rect width="48" height="48" rx="12" fill="url(#lg)"/>
@@ -133,10 +133,10 @@ const UI = (() => {
     const el = document.getElementById("app-header");
     if (!el) return;
     el.innerHTML = `
-    <nav class="navbar navbar-expand-lg sticky-top mtx-glass-navbar">
+    <nav class="navbar navbar-expand-lg sticky-top glass-navbar">
       <div class="container">
         <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
-          ${LOGO}<span class="mtx-brand-name fs-5">Motorix<span>.</span> Autopartes</span>
+          ${LOGO}<span class="brand-name fs-5">Motorix<span>.</span> Autopartes</span>
         </a>
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-label="Menú">
           <i class="bi bi-list fs-2"></i>
@@ -146,9 +146,9 @@ const UI = (() => {
             ${NAV.map((n) => `<li class="nav-item"><a class="nav-link ${n.id === active ? "active" : ""}" href="${n.href}">${n.label}</a></li>`).join("")}
           </ul>
           <div class="d-flex align-items-center gap-2 flex-wrap" id="authArea">
-            <a class="btn mtx-btn-glass" href="iniciar-sesion.html"><i class="bi bi-box-arrow-in-right me-1"></i>Iniciar sesión</a>
-            <a class="btn mtx-btn-accent" href="registro.html"><i class="bi bi-person-plus me-1"></i>Registrarse</a>
-            <button class="btn mtx-btn-glass mtx-theme-toggle" type="button" aria-label="Cambiar tema"><i class="bi bi-moon-stars-fill"></i></button>
+            <a class="btn btn-glass" href="iniciar-sesion.html"><i class="bi bi-box-arrow-in-right me-1"></i>Iniciar sesión</a>
+            <a class="btn btn-accent" href="registro.html"><i class="bi bi-person-plus me-1"></i>Registrarse</a>
+            <button class="btn btn-glass theme-toggle" type="button" aria-label="Cambiar tema"><i class="bi bi-moon-stars-fill"></i></button>
           </div>
         </div>
       </div>
@@ -159,22 +159,22 @@ const UI = (() => {
     const el = document.getElementById("app-footer");
     if (!el) return;
     el.innerHTML = `
-    <footer class="mtx-glass-footer mt-5 pt-5 pb-3">
+    <footer class="glass-footer mt-5 pt-5 pb-3">
       <div class="container">
         <div class="row g-4">
           <div class="col-lg-4">
-            <div class="d-flex align-items-center gap-2 mb-3">${LOGO}<span class="mtx-brand-name fs-5">Motorix<span>.</span> Autopartes</span></div>
-            <p class="mtx-text-muted-2 small mb-0">Fabricación y venta de autopartes para concesionarias, autopartistas, empresas y consumidor final.</p>
+            <div class="d-flex align-items-center gap-2 mb-3">${LOGO}<span class="brand-name fs-5">Motorix<span>.</span> Autopartes</span></div>
+            <p class="text-muted-2 small mb-0">Fabricación y venta de autopartes para concesionarias, autopartistas, empresas y consumidor final.</p>
           </div>
           <div class="col-6 col-lg-2">
             <h6 class="fw-bold">Sitio</h6>
             <ul class="list-unstyled small">
-              ${NAV.map((n) => `<li class="mb-1"><a class="mtx-footer-link" href="${n.href}">${n.label}</a></li>`).join("")}
+              ${NAV.map((n) => `<li class="mb-1"><a class="footer-link" href="${n.href}">${n.label}</a></li>`).join("")}
             </ul>
           </div>
           <div class="col-6 col-lg-3">
             <h6 class="fw-bold">Contacto</h6>
-            <ul class="list-unstyled small mtx-text-muted-2">
+            <ul class="list-unstyled small text-muted-2">
               <li class="mb-1"><i class="bi bi-telephone me-2"></i>+54 351 000-0000</li>
               <li class="mb-1"><i class="bi bi-envelope me-2"></i>ventas@motorix.example</li>
               <li class="mb-1"><i class="bi bi-clock me-2"></i>Lun a Vie · 8 a 17 hs</li>
@@ -182,13 +182,13 @@ const UI = (() => {
           </div>
           <div class="col-lg-3">
             <h6 class="fw-bold">Atención</h6>
-            <p class="small mtx-text-muted-2 mb-0">Listas de precios diferenciales para concesionarias y autopartistas. Consultá por venta mayorista.</p>
+            <p class="small text-muted-2 mb-0">Listas de precios diferenciales para concesionarias y autopartistas. Consultá por venta mayorista.</p>
           </div>
         </div>
         <hr class="opacity-25 mt-4">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center small mtx-text-muted-2 gap-2">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center small text-muted-2 gap-2">
           <span>© ${new Date().getFullYear()} Motorix Autopartes. Todos los derechos reservados.</span>
-          <a class="mtx-footer-link mtx-admin-link" href="login.html"><i class="bi bi-shield-lock me-1"></i>Acceso administrador</a>
+          <a class="footer-link admin-link" href="login.html"><i class="bi bi-shield-lock me-1"></i>Acceso administrador</a>
         </div>
       </div>
     </footer>`;
@@ -196,8 +196,8 @@ const UI = (() => {
 
   /* ---------- Avisos con SweetAlert2 (con respaldo nativo si no carga el CDN) ---------- */
   const BTN = {
-    confirmButton: "btn mtx-btn-accent mx-1",
-    cancelButton: "btn mtx-btn-glass mx-1",
+    confirmButton: "btn btn-accent mx-1",
+    cancelButton: "btn btn-glass mx-1",
     denyButton: "btn btn-danger mx-1",
   };
   const swal = () => (window.Swal ? Swal.mixin({ buttonsStyling: false, reverseButtons: true, customClass: BTN }) : null);
@@ -238,25 +238,25 @@ const UI = (() => {
     const compat = (p.modelos || [])
       .map((id) => models.find((m) => m.idModelo === id))
       .filter(Boolean);
-    const shown = compat.slice(0, 3).map((m) => `<span class="mtx-compat-chip">${esc(m.marca)} ${esc(m.nombre)}</span>`).join("");
-    const more = compat.length > 3 ? `<span class="mtx-compat-chip">+${compat.length - 3}</span>` : "";
-    const badge = stockBadge(p).replace('class="badge', 'class="mtx-stock-badge badge');
+    const shown = compat.slice(0, 3).map((m) => `<span class="compat-chip">${esc(m.marca)} ${esc(m.nombre)}</span>`).join("");
+    const more = compat.length > 3 ? `<span class="compat-chip">+${compat.length - 3}</span>` : "";
+    const badge = stockBadge(p).replace('class="badge', 'class="stock-badge badge');
     const thumb = p.imagenUrl
-      ? `<img class="mtx-part-img" src="${esc(p.imagenUrl)}" alt="${esc(p.descripcion)}" loading="lazy">`
+      ? `<img class="part-img" src="${esc(p.imagenUrl)}" alt="${esc(p.descripcion)}" loading="lazy">`
       : catIcon(p.categoria);
     return `
     <div class="col-sm-6 col-lg-4 col-xl-3">
-      <article class="mtx-glass mtx-part-card">
-        <div class="mtx-part-thumb" data-cat="${esc(p.categoria)}">
+      <article class="glass part-card">
+        <div class="part-thumb" data-cat="${esc(p.categoria)}">
           ${thumb}${badge}
         </div>
         <div class="p-3 d-flex flex-column flex-grow-1">
-          <span class="mtx-part-sku">${esc(p.codigoParte)} · ${esc(p.categoria)}</span>
+          <span class="part-sku">${esc(p.codigoParte)} · ${esc(p.categoria)}</span>
           <h3 class="h6 fw-bold my-1">${esc(p.descripcion)}</h3>
           <div class="my-2">${shown}${more}</div>
           <div class="mt-auto d-flex align-items-center justify-content-between">
             <span class="fw-bold fs-5">${p.precio != null ? money(p.precio) : "Consultar"}</span>
-            <a class="btn mtx-btn-accent btn-sm" href="${esc(consultarParte(p))}" target="_blank" rel="noopener">Consultar</a>
+            <a class="btn btn-accent btn-sm" href="${esc(consultarParte(p))}" target="_blank" rel="noopener">Consultar</a>
           </div>
         </div>
       </article>
@@ -266,17 +266,17 @@ const UI = (() => {
   /* ---------- Fila de autoparte para la vista en grilla ---------- */
   function partRow(p, models) {
     const compat = (p.modelos || []).map((id) => models.find((m) => m.idModelo === id)).filter(Boolean);
-    const shown = compat.slice(0, 2).map((m) => `<span class="mtx-compat-chip">${esc(m.marca)} ${esc(m.nombre)}</span>`).join("");
-    const more = compat.length > 2 ? `<span class="mtx-compat-chip">+${compat.length - 2}</span>` : "";
+    const shown = compat.slice(0, 2).map((m) => `<span class="compat-chip">${esc(m.marca)} ${esc(m.nombre)}</span>`).join("");
+    const more = compat.length > 2 ? `<span class="compat-chip">+${compat.length - 2}</span>` : "";
     return `
     <tr>
-      <td class="mtx-part-sku mtx-part-row-sku">${esc(p.codigoParte)}</td>
+      <td class="part-sku part-row-sku">${esc(p.codigoParte)}</td>
       <td class="fw-semibold">${esc(p.descripcion)}</td>
       <td>${catIcon(p.categoria, "me-1")}${esc(p.categoria)}</td>
-      <td>${shown}${more || (shown ? "" : '<span class="mtx-text-muted-2 small">–</span>')}</td>
+      <td>${shown}${more || (shown ? "" : '<span class="text-muted-2 small">–</span>')}</td>
       <td class="text-end fw-bold text-nowrap">${p.precio != null ? money(p.precio) : "–"}</td>
       <td>${stockBadge(p)}</td>
-      <td class="text-end"><a class="btn mtx-btn-accent btn-sm" href="${esc(consultarParte(p))}" target="_blank" rel="noopener">Consultar</a></td>
+      <td class="text-end"><a class="btn btn-accent btn-sm" href="${esc(consultarParte(p))}" target="_blank" rel="noopener">Consultar</a></td>
     </tr>`;
   }
 
@@ -287,9 +287,9 @@ const UI = (() => {
     let cliente;
     try { cliente = await Api.clienteActual(); } catch (e) { return; } // sin sesión: quedan los botones
     if (!cliente) return;
-    const theme = area.querySelector(".mtx-theme-toggle");
+    const theme = area.querySelector(".theme-toggle");
     area.innerHTML = `<span class="small d-flex align-items-center"><i class="bi bi-person-circle fs-5 me-2"></i>${esc(cliente.nombreRazonSocial)}</span>
-      <button class="btn mtx-btn-glass" type="button" id="clienteLogout"><i class="bi bi-box-arrow-right me-1"></i>Salir</button>`;
+      <button class="btn btn-glass" type="button" id="clienteLogout"><i class="bi bi-box-arrow-right me-1"></i>Salir</button>`;
     area.appendChild(theme);
     document.getElementById("clienteLogout").addEventListener("click", async () => {
       try { await Api.logoutCliente(); } catch (e) { /* igual se recarga */ }
@@ -304,9 +304,9 @@ const UI = (() => {
     renderFooter();
     applyTheme(getTheme());
     document.addEventListener("click", (e) => {
-      if (e.target.closest(".mtx-theme-toggle")) toggleTheme();
+      if (e.target.closest(".theme-toggle")) toggleTheme();
 
-      const toggle = e.target.closest(".mtx-password-toggle");
+      const toggle = e.target.closest(".password-toggle");
       if (toggle) {
         const input = toggle.closest(".input-group")?.querySelector("input");
         if (!input) return;

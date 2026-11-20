@@ -26,10 +26,10 @@ UI.init("inicio");
     .map(
       (s) => `
       <div class="col-sm-6 col-lg-3">
-        <div class="mtx-glass mtx-segment-card">
-          <div class="mtx-icon-tile mb-3"><i class="bi ${s.icon}"></i></div>
+        <div class="glass segment-card">
+          <div class="icon-tile mb-3"><i class="bi ${s.icon}"></i></div>
           <h3 class="h5 fw-bold">${s.title}</h3>
-          <p class="mtx-text-muted-2 small mb-0">${s.text}</p>
+          <p class="text-muted-2 small mb-0">${s.text}</p>
         </div>
       </div>`
     )
@@ -88,18 +88,18 @@ UI.init("inicio");
     el.dataset.target = el.textContent;
     el.textContent = "0";
   });
-  const stats = document.querySelector(".mtx-stat-num").closest(".mtx-glass");
+  const stats = document.querySelector(".stat-num").closest(".glass");
 
   Animations.init(
     [
-      [".mtx-hero .col-lg-7 > *", "up", 120],
-      [".mtx-hero .col-lg-5 > *", "right", 0],
-      ["main > section.container:nth-of-type(2) .mtx-glass", "zoom", 0],
-      [".mtx-section .text-center", "up", 0],
+      [".hero .col-lg-7 > *", "up", 120],
+      [".hero .col-lg-5 > *", "right", 0],
+      ["main > section.container:nth-of-type(2) .glass", "zoom", 0],
+      [".section .text-center", "up", 0],
       ["#segments > *", "up", 120],
-      [".mtx-section .d-flex.justify-content-between", "up", 0],
+      [".section .d-flex.justify-content-between", "up", 0],
       ["#featured > *", "up", 100],
-      ["main > section.container:last-of-type .mtx-glass", "zoom", 0],
+      ["main > section.container:last-of-type .glass", "zoom", 0],
     ],
     { onReveal: (el) => { if (el === stats) document.querySelectorAll("[data-target]").forEach(countUp); } }
   );

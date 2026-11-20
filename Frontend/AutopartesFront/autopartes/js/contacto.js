@@ -5,7 +5,7 @@ UI.init("contacto");
   document.getElementById("gmailBtn").href = UI.gmailLink("Consulta desde el sitio web", "Hola, quisiera consultar por...");
   Animations.init([
     ["main > .mb-4", "up", 0],
-    [".col-lg-7 > .mtx-glass", "left", 0],
-    [".col-lg-5 > .mtx-glass", "right", 150],
+    [".col-lg-7 > .glass", "left", 0],
+    [".col-lg-5 > .glass", "right", 150],
   ]);
 })();

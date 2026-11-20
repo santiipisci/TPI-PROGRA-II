@@ -5,7 +5,7 @@
  */
 const Animations = (() => {
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const BASE_PLAN = [["#app-footer .mtx-glass-footer .row > *", "up", 100]];
+  const BASE_PLAN = [["#app-footer .glass-footer .row > *", "up", 100]];
   let plan = [];
   let onReveal = null;
   let io = null;
