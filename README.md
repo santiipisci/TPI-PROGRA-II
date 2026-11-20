@@ -2,6 +2,8 @@
 
 Trabajo Práctico Integrador de la asignatura **Programación II**.
 
+| Dato | Detalle |
+|---|---|
 | **Universidad / Facultad** | UTN FRC |
 | **Carrera** | Tecnicatura en Programación |
 | **Cátedra** | Programación II |
