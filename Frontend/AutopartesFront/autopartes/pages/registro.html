@@ -27,7 +27,7 @@
               <div class="col-md-6"><label class="form-label" for="rTipo">Tipo de cliente</label><select id="rTipo" class="form-select" required></select></div>
               <div class="col-md-6"><label class="form-label" for="rNombre">Nombre / Razón social</label><input id="rNombre" class="form-control" required maxlength="100" autocomplete="name"></div>
               <div class="col-md-6"><label class="form-label" for="rDoc">Documento / CUIL</label><input id="rDoc" class="form-control" required maxlength="13" inputmode="numeric" placeholder="Solo números o con guiones"></div>
-              <div class="col-md-6"><label class="form-label" for="rTel">Teléfono</label><input id="rTel" type="tel" class="form-control" required maxlength="20" autocomplete="tel"></div>
+              <div class="col-md-6"><label class="form-label" for="rTel">Teléfono</label><input id="rTel" type="tel" inputmode="numeric" pattern="[0-9]{7,15}" class="form-control" required maxlength="15" autocomplete="tel"></div>
               <div class="col-12"><label class="form-label" for="rDir">Dirección</label><input id="rDir" class="form-control" required maxlength="150" autocomplete="street-address"></div>
               <div class="col-12"><label class="form-label" for="rEmail">Email</label><input id="rEmail" type="email" class="form-control" required maxlength="100" autocomplete="email"></div>
               <div class="col-md-6"><label class="form-label" for="rClave">Contraseña</label><input id="rClave" type="password" class="form-control" required minlength="8" autocomplete="new-password"><div class="form-text">Mínimo 8 caracteres.</div></div>

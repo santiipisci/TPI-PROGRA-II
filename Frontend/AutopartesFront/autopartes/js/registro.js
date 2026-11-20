@@ -7,6 +7,8 @@ UI.init("");
   const $ = (id) => document.getElementById(id);
   Animations.init([[".glass.p-4", "zoom", 0]]);
 
+  $("rTel").addEventListener("input", (e) => { e.target.value = e.target.value.replace(/\D/g, ""); });
+
   // Si ya hay sesión de cliente, no tiene sentido mostrar el formulario
   try { if (await Api.clienteActual()) { location.replace("index.html"); return; } } catch (e) { /* sin sesión */ }
 
@@ -35,6 +37,7 @@ UI.init("");
     if (!dto.idTipoCliente) return warn("Elegí el tipo de cliente.");
     if (!dto.nombreRazonSocial || !dto.telefono || !dto.direccion) return warn("Completá todos los campos.");
     if (!/^[0-9\-]{7,13}$/.test(dto.documentoCuit)) return warn("El documento / CUIL debe tener entre 7 y 13 dígitos (se admiten guiones).");
+    if (!/^\d{7,15}$/.test(dto.telefono)) return warn("El teléfono debe contener solo números (entre 7 y 15 dígitos).");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dto.email)) return warn("Verificá el email.");
     if (dto.clave.length < 8) return warn("La contraseña debe tener al menos 8 caracteres.");
     if (dto.clave !== $("rClave2").value) return warn("Las contraseñas no coinciden.");

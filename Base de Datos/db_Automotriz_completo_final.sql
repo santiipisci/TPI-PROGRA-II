@@ -1,20 +1,20 @@
-SET QUOTED_IDENTIFIER ON;
+ÔªøSET QUOTED_IDENTIFIER ON;
 /* =====================================================================
-   BASES DE DATOS I - TPI Grupal - Caso N3 (F·brica automotriz)
+   BASES DE DATOS I - TPI Grupal - Caso N3 (F√°brica automotriz)
    Modelo completo y funcional - SQL Server
    Se puede ejecutar completo, de una vez. Es re-ejecutable: si la base ya existe, la recrea desde cero.
 
-   *** ATENCI”N: este script ELIMINA db_Automotriz si ya existe (se pierden todos sus datos). ***
+   *** ATENCI√ìN: este script ELIMINA db_Automotriz si ya existe (se pierden todos sus datos). ***
    Usarlo para crear la base por primera vez o para reiniciarla en un entorno de desarrollo.
    Para conservar datos, borrar o comentar el bloque "DROP DATABASE" de abajo.
 
    Cambios respecto del script original (marcados con [NUEVO] / [CAMBIO]):
-   [CAMBIO] CLIENTE: email obligatorio y ˙nico + claveHash (login de clientes del sitio)
-   [CAMBIO] MODELO: anioDesde / anioHasta (rango de aÒos que muestra el sitio)
-   [CAMBIO] IMAGEN_PRODUCTO / PRECIO_PRODUCTO: un ˙nico registro principal / vigente por producto
+   [CAMBIO] CLIENTE: email obligatorio y √∫nico + claveHash (login de clientes del sitio)
+   [CAMBIO] MODELO: anioDesde / anioHasta (rango de a√±os que muestra el sitio)
+   [CAMBIO] IMAGEN_PRODUCTO / PRECIO_PRODUCTO: un √∫nico registro principal / vigente por producto
    [NUEVO]  USUARIO_ADMIN: administradores del panel
-   [NUEVO]  Õndices de b˙squeda y carga inicial de todos los cat·logos
-   [NUEVO]  SecciÛn 9 (OPCIONAL): datos de demostraciÛn del cat·logo
+   [NUEVO]  √çndices de b√∫squeda y carga inicial de todos los cat√°logos
+   [NUEVO]  Secci√≥n 9 (OPCIONAL): datos de demostraci√≥n del cat√°logo
    ===================================================================== */
 USE master;
 CREATE DATABASE db_Automotriz_final;
@@ -23,7 +23,7 @@ USE db_Automotriz_final;
 GO
 
 /* ---------------------------------------------------------------------
-   1) CAT¡LOGOS
+   1) CAT√ÅLOGOS
    --------------------------------------------------------------------- */
 CREATE TABLE TIPO_CLIENTE (
     idTipoCliente INT IDENTITY(1,1) PRIMARY KEY,
@@ -32,7 +32,7 @@ CREATE TABLE TIPO_CLIENTE (
 
 CREATE TABLE TIPO_PRODUCTO (
     idTipoProducto INT IDENTITY(1,1) PRIMARY KEY,
-    descripcion    VARCHAR(30) NOT NULL UNIQUE     -- VehÌculo, Autoparte
+    descripcion    VARCHAR(30) NOT NULL UNIQUE     -- Veh√≠culo, Autoparte
 );
 
 CREATE TABLE MARCA (
@@ -40,7 +40,7 @@ CREATE TABLE MARCA (
     nombre  VARCHAR(50) NOT NULL UNIQUE
 );
 
--- [CAMBIO] anioDesde / anioHasta: rango de aÒos del modelo (opcionales)
+-- [CAMBIO] anioDesde / anioHasta: rango de a√±os del modelo (opcionales)
 CREATE TABLE MODELO (
     idModelo   INT IDENTITY(1,1) PRIMARY KEY,
     idMarca    INT NOT NULL REFERENCES MARCA(idMarca),
@@ -56,27 +56,27 @@ CREATE TABLE MODELO (
 
 CREATE TABLE TIPO_CARROCERIA (
     idTipoCarroceria INT IDENTITY(1,1) PRIMARY KEY,
-    descripcion      VARCHAR(30) NOT NULL UNIQUE   -- Sed·n, Hatchback, SUV, Pick-up, etc.
+    descripcion      VARCHAR(30) NOT NULL UNIQUE   -- Sed√°n, Hatchback, SUV, Pick-up, etc.
 );
 
 CREATE TABLE TIPO_COMBUSTIBLE (
     idCombustible INT IDENTITY(1,1) PRIMARY KEY,
-    descripcion   VARCHAR(30) NOT NULL UNIQUE      -- Nafta, DiÈsel, GNC, HÌbrido, ElÈctrico
+    descripcion   VARCHAR(30) NOT NULL UNIQUE      -- Nafta, Di√©sel, GNC, H√≠brido, El√©ctrico
 );
 
 CREATE TABLE TRANSMISION (
     idTransmision INT IDENTITY(1,1) PRIMARY KEY,
-    descripcion   VARCHAR(30) NOT NULL UNIQUE      -- Manual, Autom·tica
+    descripcion   VARCHAR(30) NOT NULL UNIQUE      -- Manual, Autom√°tica
 );
 
 CREATE TABLE CATEGORIA_AUTOPARTE (
     idCategoria INT IDENTITY(1,1) PRIMARY KEY,
-    nombre      VARCHAR(50) NOT NULL UNIQUE        -- ElÈctrico, Escape, Filtros, Frenos, Motor, RefrigeraciÛn, SuspensiÛn, TransmisiÛn
+    nombre      VARCHAR(50) NOT NULL UNIQUE        -- El√©ctrico, Escape, Filtros, Frenos, Motor, Refrigeraci√≥n, Suspensi√≥n, Transmisi√≥n
 );
 
 CREATE TABLE ESTADO_ORDEN (
     idEstadoOrden INT IDENTITY(1,1) PRIMARY KEY,
-    descripcion   VARCHAR(30) NOT NULL UNIQUE      -- Pendiente, En producciÛn, Lista, Entregada, Cancelada
+    descripcion   VARCHAR(30) NOT NULL UNIQUE      -- Pendiente, En producci√≥n, Lista, Entregada, Cancelada
 );
 
 CREATE TABLE ESTADO_AUTOPLAN (
@@ -88,7 +88,7 @@ CREATE TABLE ESTADO_AUTOPLAN (
    2) CLIENTES Y USUARIOS
    --------------------------------------------------------------------- */
 -- [CAMBIO] email NOT NULL UNIQUE (es el usuario de login) y claveHash (hash generado por el backend, nunca texto plano).
--- claveHash NULL = cliente cargado por el negocio que todavÌa no creÛ su cuenta en el sitio.
+-- claveHash NULL = cliente cargado por el negocio que todav√≠a no cre√≥ su cuenta en el sitio.
 CREATE TABLE CLIENTE (
     idCliente         INT IDENTITY(1,1) PRIMARY KEY,
     idTipoCliente     INT          NOT NULL REFERENCES TIPO_CLIENTE(idTipoCliente),
@@ -111,16 +111,16 @@ CREATE TABLE USUARIO_ADMIN (
 );
 
 /* ---------------------------------------------------------------------
-   3) PRODUCTOS (supertipo), subtipos e im·genes
+   3) PRODUCTOS (supertipo), subtipos e im√°genes
    --------------------------------------------------------------------- */
 CREATE TABLE PRODUCTO (
     idProducto     INT IDENTITY(1,1) PRIMARY KEY,
     idTipoProducto INT          NOT NULL REFERENCES TIPO_PRODUCTO(idTipoProducto),
     descripcion    VARCHAR(150) NOT NULL,
-    activo         BIT          NOT NULL DEFAULT 1      -- baja lÛgica
+    activo         BIT          NOT NULL DEFAULT 1      -- baja l√≥gica
 );
 
--- Tabla de im·genes asociada a los productos (VehÌculos y Autopartes)
+-- Tabla de im√°genes asociada a los productos (Veh√≠culos y Autopartes)
 CREATE TABLE IMAGEN_PRODUCTO (
     idImagen       INT IDENTITY(1,1) PRIMARY KEY,
     idProducto     INT          NOT NULL REFERENCES PRODUCTO(idProducto),
@@ -129,10 +129,10 @@ CREATE TABLE IMAGEN_PRODUCTO (
     esPrincipal    BIT          NOT NULL DEFAULT 0,
     orden          TINYINT      NOT NULL DEFAULT 1 CHECK (orden > 0)
 );
--- [CAMBIO] Como m·ximo una imagen principal por producto
+-- [CAMBIO] Como m√°ximo una imagen principal por producto
 CREATE UNIQUE INDEX UX_Imagen_Principal ON IMAGEN_PRODUCTO(idProducto) WHERE esPrincipal = 1;
 
--- Subtipo: relaciÛn 1 a 0..1 con PRODUCTO (la PK es a la vez FK)
+-- Subtipo: relaci√≥n 1 a 0..1 con PRODUCTO (la PK es a la vez FK)
 CREATE TABLE VEHICULO (
     idProducto       INT PRIMARY KEY REFERENCES PRODUCTO(idProducto),
     idModelo         INT           NOT NULL REFERENCES MODELO(idModelo),
@@ -146,7 +146,7 @@ CREATE TABLE VEHICULO (
     cantidadPuertas  TINYINT       NULL
 );
 
--- Subtipo: relaciÛn 1 a 0..1 con PRODUCTO
+-- Subtipo: relaci√≥n 1 a 0..1 con PRODUCTO
 CREATE TABLE AUTOPARTE (
     idProducto    INT PRIMARY KEY REFERENCES PRODUCTO(idProducto),
     idCategoria   INT         NOT NULL REFERENCES CATEGORIA_AUTOPARTE(idCategoria),
@@ -184,7 +184,7 @@ CREATE TABLE PRECIO_PRODUCTO (
 CREATE UNIQUE INDEX UX_Precio_Vigente ON PRECIO_PRODUCTO(idProducto) WHERE fechaHasta IS NULL;
 
 /* ---------------------------------------------------------------------
-   4) ”RDENES DE PEDIDO
+   4) √ìRDENES DE PEDIDO
    --------------------------------------------------------------------- */
 CREATE TABLE ORDEN_PEDIDO (
     idOrdenPedido INT IDENTITY(1,1) PRIMARY KEY,
@@ -202,8 +202,21 @@ CREATE TABLE DETALLE_ORDEN_PEDIDO (
     PRIMARY KEY (idOrdenPedido, idProducto)
 );
 
+-- [NUEVO] Historial de estados de cada orden
+CREATE TABLE SEGUIMIENTO_ORDEN (
+    idSeguimiento INT IDENTITY(1,1) PRIMARY KEY,
+    idOrdenPedido INT NOT NULL,
+    idEstadoOrden INT NOT NULL,
+    fecha         DATE NOT NULL,
+    observacion   VARCHAR(300) NULL,
+    CONSTRAINT FK_Seguimiento_Orden  FOREIGN KEY (idOrdenPedido) REFERENCES ORDEN_PEDIDO(idOrdenPedido) ON DELETE CASCADE,
+    CONSTRAINT FK_Seguimiento_Estado FOREIGN KEY (idEstadoOrden) REFERENCES ESTADO_ORDEN(idEstadoOrden)
+);
+
+CREATE INDEX IX_Seguimiento_Orden ON SEGUIMIENTO_ORDEN(idOrdenPedido, fecha);
+
 /* ---------------------------------------------------------------------
-   5) FACTURACI”N
+   5) FACTURACI√ìN
    --------------------------------------------------------------------- */
 CREATE TABLE ESCALA_DESCUENTO_MAYORISTA (
     idEscala            INT IDENTITY(1,1) PRIMARY KEY,
@@ -218,7 +231,7 @@ CREATE TABLE FACTURA (
     fecha         DATE          NOT NULL,
     total         DECIMAL(14,2) NOT NULL CHECK (total >= 0)
 );
--- Una orden de pedido se asocia como m·ximo a una factura (1 a 0..1)
+-- Una orden de pedido se asocia como m√°ximo a una factura (1 a 0..1)
 CREATE UNIQUE INDEX UX_Factura_Orden ON FACTURA(idOrdenPedido) WHERE idOrdenPedido IS NOT NULL;
 
 CREATE TABLE DETALLE_FACTURA (
@@ -237,7 +250,7 @@ CREATE TABLE DETALLE_FACTURA (
 /* ---------------------------------------------------------------------
    6) AUTOPLAN
    --------------------------------------------------------------------- */
--- Tasa seg˙n cantidad de cuotas, con vigencia (para no perder la tasa de planes ya firmados)
+-- Tasa seg√∫n cantidad de cuotas, con vigencia (para no perder la tasa de planes ya firmados)
 CREATE TABLE TASA_INTERES (
     idTasa         INT IDENTITY(1,1) PRIMARY KEY,
     cantidadCuotas INT          NOT NULL CHECK (cantidadCuotas > 0),
@@ -248,7 +261,7 @@ CREATE TABLE TASA_INTERES (
     CONSTRAINT UQ_Tasa UNIQUE (cantidadCuotas, fechaDesde)
 );
 
--- Un autoplan por lÌnea de factura (1 a 0..1 con DETALLE_FACTURA).
+-- Un autoplan por l√≠nea de factura (1 a 0..1 con DETALLE_FACTURA).
 -- Regla de negocio: solo clientes "Consumidor final" (se valida en la capa de negocio).
 CREATE TABLE AUTOPLAN (
     idAutoplan       INT IDENTITY(1,1) PRIMARY KEY,
@@ -273,8 +286,8 @@ CREATE TABLE CUOTA_AUTOPLAN (
 GO
 
 /* ---------------------------------------------------------------------
-   7) ÕNDICES DE B⁄SQUEDA  [NUEVO]
-   SQL Server no indexa autom·ticamente las columnas FK; se agregan las que usan las consultas del sitio.
+   7) √çNDICES DE B√öSQUEDA  [NUEVO]
+   SQL Server no indexa autom√°ticamente las columnas FK; se agregan las que usan las consultas del sitio.
    --------------------------------------------------------------------- */
 CREATE INDEX IX_Producto_Activo        ON PRODUCTO(activo) INCLUDE (idTipoProducto, descripcion);
 CREATE INDEX IX_Autoparte_Categoria    ON AUTOPARTE(idCategoria);
@@ -286,36 +299,36 @@ CREATE INDEX IX_Factura_Cliente        ON FACTURA(idCliente);
 GO
 
 /* ---------------------------------------------------------------------
-   8) CARGA INICIAL DE CAT¡LOGOS
+   8) CARGA INICIAL DE CAT√ÅLOGOS
    --------------------------------------------------------------------- */
 INSERT INTO CATEGORIA_AUTOPARTE (nombre) VALUES
-('ElÈctrico'), ('Escape'), ('Filtros'), ('Frenos'), ('Motor'), ('RefrigeraciÛn'), ('SuspensiÛn'), ('TransmisiÛn');
+('El√©ctrico'), ('Escape'), ('Filtros'), ('Frenos'), ('Motor'), ('Refrigeraci√≥n'), ('Suspensi√≥n'), ('Transmisi√≥n');
 
 INSERT INTO TIPO_CLIENTE (descripcion) VALUES
 ('Consumidor final'), ('Empresa'), ('Concesionario'), ('Vendedora de autopartes');
 
-INSERT INTO TIPO_PRODUCTO (descripcion) VALUES ('VehÌculo'), ('Autoparte');
+INSERT INTO TIPO_PRODUCTO (descripcion) VALUES ('Veh√≠culo'), ('Autoparte');
 
 INSERT INTO ESTADO_ORDEN (descripcion) VALUES
-('Pendiente'), ('En producciÛn'), ('Lista'), ('Entregada'), ('Cancelada');
+('Pendiente'), ('En producci√≥n'), ('Lista'), ('Entregada'), ('Cancelada');
 
 INSERT INTO ESTADO_AUTOPLAN (descripcion) VALUES ('Vigente'), ('Finalizado'), ('Rescindido');
 
 INSERT INTO TIPO_CARROCERIA (descripcion) VALUES
-('Sed·n'), ('Hatchback'), ('SUV'), ('Pick-up'), ('Utilitario'), ('CoupÈ');
+('Sed√°n'), ('Hatchback'), ('SUV'), ('Pick-up'), ('Utilitario'), ('Coup√©');
 
 INSERT INTO TIPO_COMBUSTIBLE (descripcion) VALUES
-('Nafta'), ('DiÈsel'), ('GNC'), ('HÌbrido'), ('ElÈctrico');
+('Nafta'), ('Di√©sel'), ('GNC'), ('H√≠brido'), ('El√©ctrico');
 
-INSERT INTO TRANSMISION (descripcion) VALUES ('Manual'), ('Autom·tica');
+INSERT INTO TRANSMISION (descripcion) VALUES ('Manual'), ('Autom√°tica');
 GO
 
 /* ---------------------------------------------------------------------
-   9) DATOS DE DEMOSTRACI”N (OPCIONAL)  [NUEVO]
+   9) DATOS DE DEMOSTRACI√ìN (OPCIONAL)  [NUEVO]
    Marcas, modelos y 14 autopartes con precio, stock y compatibilidades,
    para que el sitio muestre contenido apenas se conecta la API.
-   Para una base vacÌa, borrar o comentar desde ac· hasta el final.
-   No incluye clientes, Ûrdenes ni facturas: los genera el sistema.
+   Para una base vac√≠a, borrar o comentar desde ac√° hasta el final.
+   No incluye clientes, √≥rdenes ni facturas: los genera el sistema.
    --------------------------------------------------------------------- */
 INSERT INTO MARCA (nombre) VALUES
 ('Toyota'),
@@ -346,18 +359,18 @@ CREATE TABLE #Seed (codigo VARCHAR(30), descripcion VARCHAR(150), categoria VARC
 INSERT INTO #Seed VALUES
 ('FRE-001','Pastillas de freno delanteras','Frenos',38500,140,10),
 ('FRE-002','Disco de freno ventilado','Frenos',62900,64,10),
-('SUS-001','Amortiguador delantero','SuspensiÛn',91000,38,10),
-('SUS-002','Brazo de suspensiÛn inferior','SuspensiÛn',54200,12,10),
-('MOT-001','Kit de distribuciÛn con bomba','Motor',148000,22,10),
+('SUS-001','Amortiguador delantero','Suspensi√≥n',91000,38,10),
+('SUS-002','Brazo de suspensi√≥n inferior','Suspensi√≥n',54200,12,10),
+('MOT-001','Kit de distribuci√≥n con bomba','Motor',148000,22,10),
 ('MOT-002','Junta de tapa de cilindros','Motor',47800,9,10),
 ('FIL-001','Filtro de aceite','Filtros',6900,520,10),
 ('FIL-002','Filtro de aire de alto flujo','Filtros',14300,210,10),
-('TRA-001','Kit de embrague completo','TransmisiÛn',176500,17,10),
-('ELE-001','Bobina de encendido','ElÈctrico',28700,75,10),
+('TRA-001','Kit de embrague completo','Transmisi√≥n',176500,17,10),
+('ELE-001','Bobina de encendido','El√©ctrico',28700,75,10),
 ('ESC-001','Silenciador trasero','Escape',84600,6,10),
-('REF-001','Radiador de aluminio','RefrigeraciÛn',132000,14,10),
-('REF-002','Bomba de agua','RefrigeraciÛn',39800,48,10),
-('ELE-002','Alternador reconstruido','ElÈctrico',119000,4,10);
+('REF-001','Radiador de aluminio','Refrigeraci√≥n',132000,14,10),
+('REF-002','Bomba de agua','Refrigeraci√≥n',39800,48,10),
+('ELE-002','Alternador reconstruido','El√©ctrico',119000,4,10);
 
 INSERT INTO PRODUCTO (idTipoProducto, descripcion)
 SELECT (SELECT idTipoProducto FROM TIPO_PRODUCTO WHERE descripcion = 'Autoparte'), descripcion
@@ -448,8 +461,162 @@ GO
 
 /* ---------------------------------------------------------------------
    10) ADMINISTRADOR INICIAL
-   La clave se guarda con hash, asÌ que no se puede insertar desde SQL.
+   La clave se guarda con hash, no se puede insertar desde SQL.
    Crear el primer administrador desde el backend (por ejemplo, un endpoint
    o un seeder que genere el hash con PasswordHasher) y que inserte en USUARIO_ADMIN.
    --------------------------------------------------------------------- */
 
+USE db_Automotriz_final;
+GO
+
+-- 1. Insertar estados (sin especificar idEstadoOrden por ser IDENTITY)
+IF NOT EXISTS (SELECT 1 FROM dbo.ESTADO_ORDEN WHERE descripcion = 'Pendiente')
+    INSERT INTO dbo.ESTADO_ORDEN (descripcion) VALUES ('Pendiente');
+IF NOT EXISTS (SELECT 1 FROM dbo.ESTADO_ORDEN WHERE descripcion = 'En producci√≥n')
+    INSERT INTO dbo.ESTADO_ORDEN (descripcion) VALUES ('En producci√≥n');
+IF NOT EXISTS (SELECT 1 FROM dbo.ESTADO_ORDEN WHERE descripcion = 'Lista')
+    INSERT INTO dbo.ESTADO_ORDEN (descripcion) VALUES ('Lista');
+IF NOT EXISTS (SELECT 1 FROM dbo.ESTADO_ORDEN WHERE descripcion = 'Entregada')
+    INSERT INTO dbo.ESTADO_ORDEN (descripcion) VALUES ('Entregada');
+IF NOT EXISTS (SELECT 1 FROM dbo.ESTADO_ORDEN WHERE descripcion = 'Cancelada')
+    INSERT INTO dbo.ESTADO_ORDEN (descripcion) VALUES ('Cancelada');
+GO
+
+-- 2. Cargar clientes existentes en una variable de tabla para asignar IDs v√°lidos
+DECLARE @Clientes TABLE (
+    fila INT IDENTITY(1,1) PRIMARY KEY,
+    idCliente INT
+);
+
+INSERT INTO @Clientes (idCliente)
+SELECT idCliente
+FROM dbo.CLIENTE
+ORDER BY idCliente;
+
+DECLARE @TotalClientes INT = (SELECT COUNT(*) FROM @Clientes);
+
+IF @TotalClientes = 0
+BEGIN
+    RAISERROR('La tabla dbo.CLIENTE est√° vac√≠a. Inserta al menos un cliente antes de ejecutar este script.', 16, 1);
+    RETURN;
+END;
+-- Obtener IDs reales de cada estado
+DECLARE @EstPendiente INT   = (SELECT TOP 1 idEstadoOrden FROM dbo.ESTADO_ORDEN WHERE descripcion = 'Pendiente');
+DECLARE @EstProduccion INT  = (SELECT TOP 1 idEstadoOrden FROM dbo.ESTADO_ORDEN WHERE descripcion = 'En producci√≥n');
+DECLARE @EstLista INT       = (SELECT TOP 1 idEstadoOrden FROM dbo.ESTADO_ORDEN WHERE descripcion = 'Lista');
+DECLARE @EstEntregada INT   = (SELECT TOP 1 idEstadoOrden FROM dbo.ESTADO_ORDEN WHERE descripcion = 'Entregada');
+DECLARE @EstCancelada INT   = (SELECT TOP 1 idEstadoOrden FROM dbo.ESTADO_ORDEN WHERE descripcion = 'Cancelada');
+
+-- Datos base variados por mes (Junio a Noviembre 2026)
+DECLARE @DatosOrdenes TABLE (
+    idx INT IDENTITY(1,1) PRIMARY KEY,
+    codEstado VARCHAR(20),
+    fechaPedido DATE,
+    fechaEntrega DATE NULL
+);
+
+INSERT INTO @DatosOrdenes (codEstado, fechaPedido, fechaEntrega) VALUES
+-- JUNIO 2026 (4 √≥rdenes)
+('ENTREGADA', '2026-06-05', '2026-06-10'),
+('ENTREGADA', '2026-06-14', '2026-06-19'),
+('CANCELADA', '2026-06-21', NULL),
+('ENTREGADA', '2026-06-27', '2026-07-02'),
+
+-- JULIO 2026 (6 √≥rdenes)
+('ENTREGADA', '2026-07-03', '2026-07-08'),
+('ENTREGADA', '2026-07-09', '2026-07-13'),
+('CANCELADA', '2026-07-15', NULL),
+('ENTREGADA', '2026-07-18', '2026-07-24'),
+('ENTREGADA', '2026-07-22', '2026-07-27'),
+('ENTREGADA', '2026-07-29', '2026-08-03'),
+-- AGOSTO 2026 (9 √≥rdenes)
+('ENTREGADA', '2026-08-02', '2026-08-06'),
+('ENTREGADA', '2026-08-06', '2026-08-12'),
+('ENTREGADA', '2026-08-10', '2026-08-15'),
+('CANCELADA', '2026-08-13', NULL),
+('ENTREGADA', '2026-08-17', '2026-08-21'),
+('ENTREGADA', '2026-08-20', '2026-08-26'),
+('ENTREGADA', '2026-08-24', '2026-08-29'),
+('CANCELADA', '2026-08-27', NULL),
+('ENTREGADA', '2026-08-30', '2026-09-04'),
+
+-- SEPTIEMBRE 2026 (12 √≥rdenes)
+('ENTREGADA', '2026-09-02', '2026-09-07'),
+('ENTREGADA', '2026-09-05', '2026-09-10'),
+('ENTREGADA', '2026-09-08', '2026-09-14'),
+('CANCELADA', '2026-09-11', NULL),
+('ENTREGADA', '2026-09-14', '2026-09-18'),
+('ENTREGADA', '2026-09-16', '2026-09-22'),
+('ENTREGADA', '2026-09-19', '2026-09-24'),
+('ENTREGADA', '2026-09-21', '2026-09-26'),
+('CANCELADA', '2026-09-24', NULL),
+('ENTREGADA', '2026-09-26', '2026-10-01'),
+('ENTREGADA', '2026-09-28', '2026-10-03'),
+('ENTREGADA', '2026-09-30', '2026-10-05'),
+
+-- OCTUBRE 2026 (15 √≥rdenes)
+('ENTREGADA', '2026-10-02', '2026-10-07'),
+('ENTREGADA', '2026-10-04', '2026-10-09'),
+('ENTREGADA', '2026-10-06', '2026-10-12'),
+('CANCELADA', '2026-10-08', NULL),
+('ENTREGADA', '2026-10-10', '2026-10-15'),
+('ENTREGADA', '2026-10-12', '2026-10-17'),
+('LISTA',     '2026-10-15', NULL),
+('ENTREGADA', '2026-10-17', '2026-10-22'),
+('ENTREGADA', '2026-10-19', '2026-10-24'),
+('CANCELADA', '2026-10-21', NULL),
+('LISTA',     '2026-10-23', NULL),
+('ENTREGADA', '2026-10-25', '2026-10-30'),
+('PRODUCCION','2026-10-27', NULL),
+('ENTREGADA', '2026-10-29', '2026-11-03'),
+('LISTA',     '2026-10-31', NULL),
+-- NOVIEMBRE 2026 (18 √≥rdenes)
+('ENTREGADA', '2026-11-01', '2026-11-05'),
+('ENTREGADA', '2026-11-02', '2026-11-07'),
+('ENTREGADA', '2026-11-04', '2026-11-09'),
+('CANCELADA', '2026-11-05', NULL),
+('ENTREGADA', '2026-11-06', '2026-11-11'),
+('LISTA',     '2026-11-08', NULL),
+('ENTREGADA', '2026-11-09', '2026-11-14'),
+('PRODUCCION','2026-11-10', NULL),
+('LISTA',     '2026-11-11', NULL),
+('ENTREGADA', '2026-11-12', '2026-11-17'),
+('PRODUCCION','2026-11-13', NULL),
+('PENDIENTE', '2026-11-14', NULL),
+('PRODUCCION','2026-11-15', NULL),
+('LISTA',     '2026-11-16', NULL),
+('PENDIENTE', '2026-11-17', NULL),
+('PRODUCCION','2026-11-18', NULL),
+('PENDIENTE', '2026-11-19', NULL),
+('PENDIENTE', '2026-11-20', NULL);
+
+-- Insertar en ORDEN_PEDIDO rotando por los clientes existentes
+INSERT INTO dbo.ORDEN_PEDIDO (idCliente, idEstadoOrden, fechaPedido, fechaEntrega)
+SELECT
+    c.idCliente,
+    CASE d.codEstado
+        WHEN 'PENDIENTE'  THEN @EstPendiente
+        WHEN 'PRODUCCION' THEN @EstProduccion
+        WHEN 'LISTA'      THEN @EstLista
+        WHEN 'ENTREGADA'  THEN @EstEntregada
+        WHEN 'CANCELADA'  THEN @EstCancelada
+    END,
+    d.fechaPedido,
+    d.fechaEntrega
+FROM @DatosOrdenes d
+INNER JOIN @Clientes c
+    ON c.fila = ((d.idx - 1) % @TotalClientes) + 1;
+GO
+
+-- Detalle de las √≥rdenes sembradas: 3 autopartes por orden, rotando por el cat√°logo
+DECLARE @Partes TABLE (fila INT IDENTITY(1,1), idProducto INT);
+INSERT INTO @Partes (idProducto) SELECT idProducto FROM dbo.AUTOPARTE ORDER BY idProducto;
+DECLARE @TotalPartes INT = (SELECT COUNT(*) FROM @Partes);
+
+INSERT INTO dbo.DETALLE_ORDEN_PEDIDO (idOrdenPedido, idProducto, cantidad)
+SELECT o.idOrdenPedido, p.idProducto, 1 + ((o.idOrdenPedido + n.k) % 5)
+FROM dbo.ORDEN_PEDIDO o
+CROSS JOIN (VALUES (0), (1), (2)) n(k)
+INNER JOIN @Partes p ON p.fila = ((o.idOrdenPedido * 3 + n.k) % @TotalPartes) + 1
+WHERE NOT EXISTS (SELECT 1 FROM dbo.DETALLE_ORDEN_PEDIDO d WHERE d.idOrdenPedido = o.idOrdenPedido);
+GO

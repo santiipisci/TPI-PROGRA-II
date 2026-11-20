@@ -44,7 +44,7 @@ La clave nunca se guarda en claro: hashear en el backend (p. ej. `PasswordHasher
 | POST | `/modelos` | `{ marca, nombre }`: crea la MARCA si no existe; devuelve `{ idModelo, ... }`; 409 si ya existe |
 
 ## Base de datos
-Todo esto ya está resuelto en `db_Automotriz_completo.sql`:
+Todo esto ya está resuelto en `db_Automotriz_completo_final.sql`:
 1. **Contraseña del cliente**: `CLIENTE.claveHash` (hash generado por el backend) y `CLIENTE.email` obligatorio y único.
 2. **Usuarios administradores**: tabla `USUARIO_ADMIN`. El primer administrador hay que crearlo desde el backend, porque la clave se guarda con hash.
 3. **Años por modelo**: `MODELO.anioDesde` / `anioHasta`.

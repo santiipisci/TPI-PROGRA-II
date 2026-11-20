@@ -123,16 +123,20 @@ function initAdmin() {
             <td>${UI.esc(o.tipoCliente)}</td>
             <td><span class="badge ${st.badge}">${UI.esc(o.estado)}</span></td>
             <td class="text-end fw-semibold text-nowrap">${UI.money(o.total)}</td>
+            <td class="text-end text-nowrap">
+              <button class="btn btn-sm btn-glass me-1" data-oedit="${o.idOrdenPedido}" title="Editar" aria-label="Editar orden ${o.idOrdenPedido}"><i class="bi bi-pencil"></i></button>
+              <button class="btn btn-sm btn-glass text-danger" data-odel="${o.idOrdenPedido}" title="Eliminar" aria-label="Eliminar orden ${o.idOrdenPedido}"><i class="bi bi-trash"></i></button>
+            </td>
           </tr>`;
         }).join("")
-      : UI.stateRow(6, "No hay ventas que coincidan con el filtro.");
+      : UI.stateRow(7, "No hay ventas que coincidan con el filtro.");
     $("histResumen").textContent = hist.totalRegistros ? `Mostrando ${hist.items.length} de ${hist.totalRegistros} · Total: ${UI.money(hist.sumaTotal)}` : "";
     $("histMore").classList.toggle("d-none", hist.items.length >= hist.totalRegistros);
   }
 
   async function loadHistory(reset) {
     const seq = ++hist.seq; // descarta respuestas viejas si el filtro cambió mientras cargaba
-    if (reset) { hist.pagina = 0; hist.items = []; $("histBody").innerHTML = UI.stateRow(6, "Cargando…"); }
+    if (reset) { hist.pagina = 0; hist.items = []; $("histBody").innerHTML = UI.stateRow(7, "Cargando…"); }
     try {
       const r = await Api.ordenes({
         idEstadoOrden: $("histEstado").value === "todos" ? "" : $("histEstado").value,
@@ -148,13 +152,92 @@ function initAdmin() {
       renderHistory();
     } catch (e) {
       if (seq !== hist.seq) return;
-      $("histBody").innerHTML = UI.stateRow(6, e.message, "error");
+      $("histBody").innerHTML = UI.stateRow(7, e.message, "error");
     }
   }
   let histTimer;
   $("histEstado").addEventListener("change", () => loadHistory(true));
   $("histBuscar").addEventListener("input", () => { clearTimeout(histTimer); histTimer = setTimeout(() => loadHistory(true), 300); });
   $("histMore").addEventListener("click", () => loadHistory(false));
+
+  function itemRow(it = {}) {
+    const list = it.idProducto && !parts.some((p) => p.idProducto === it.idProducto) ? [...parts, { idProducto: it.idProducto, codigoParte: "—", descripcion: it.descripcion }] : parts;
+    return `<div class="d-flex gap-2 mb-2 oi-row">
+      <select class="form-select form-select-sm oi-prod">${list.map((p) => `<option value="${p.idProducto}" ${p.idProducto === it.idProducto ? "selected" : ""}>${UI.esc(p.codigoParte)} · ${UI.esc(p.descripcion)}</option>`).join("")}</select>
+      <input type="number" min="1" class="form-control form-control-sm oi-qty" style="width:90px" value="${it.cantidad || 1}">
+      <button type="button" class="btn btn-sm btn-glass text-danger oi-del" aria-label="Quitar autoparte"><i class="bi bi-x-lg"></i></button>
+    </div>`;
+  }
+
+  async function editOrder(id) {
+    let clientes, o = null;
+    try { [clientes, o] = await Promise.all([Api.clientes(), id ? Api.orden(id) : null]); } catch (e) { fail("No se pudo abrir la orden", e); return; }
+    const opts = (list, sel, k, txt) => list.map((x) => `<option value="${x[k]}" ${x[k] === sel ? "selected" : ""}>${UI.esc(txt(x))}</option>`).join("");
+    const { value } = await Swal.fire({
+      title: id ? `Editar orden #${id}` : "Nueva orden",
+      width: 640,
+      html: `
+        <div class="text-start">
+          <div class="row g-2 mb-3">
+            <div class="col-sm-7"><label class="form-label small" for="oCliente">Cliente</label><select id="oCliente" class="form-select">${opts(clientes, o && o.idCliente, "idCliente", (c) => `${c.nombreRazonSocial} (${c.documentoCuit})`)}</select></div>
+            <div class="col-sm-5"><label class="form-label small" for="oEstado">Estado</label><select id="oEstado" class="form-select">${opts(estados, o && o.idEstadoOrden, "idEstadoOrden", (s) => s.descripcion)}</select></div>
+            <div class="col-sm-6"><label class="form-label small" for="oPedido">Fecha del pedido</label><input id="oPedido" type="date" class="form-control" value="${o ? o.fechaPedido : new Date().toLocaleDateString("sv-SE")}"></div>
+            <div class="col-sm-6"><label class="form-label small" for="oEntrega">Fecha de entrega</label><input id="oEntrega" type="date" class="form-control" value="${(o && o.fechaEntrega) || ""}"></div>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mb-2"><span class="form-label small mb-0">Autopartes</span><button type="button" id="oAdd" class="btn btn-sm btn-glass"><i class="bi bi-plus-lg me-1"></i>Agregar</button></div>
+          <div id="oItems">${(o && o.items.length ? o.items : [{}]).map((it) => itemRow(it)).join("")}</div>
+        </div>`,
+      showCancelButton: true,
+      confirmButtonText: id ? "Guardar cambios" : "Crear orden",
+      cancelButtonText: "Cancelar",
+      reverseButtons: true,
+      buttonsStyling: false,
+      focusConfirm: false,
+      customClass: { confirmButton: "btn btn-accent mx-1", cancelButton: "btn btn-glass mx-1" },
+      didOpen: () => {
+        $("oAdd").onclick = () => $("oItems").insertAdjacentHTML("beforeend", itemRow());
+        $("oItems").onclick = (e) => {
+          const del = e.target.closest(".oi-del");
+          if (del && $("oItems").children.length > 1) del.closest(".oi-row").remove();
+        };
+      },
+      preConfirm: () => {
+        const items = [...document.querySelectorAll(".oi-row")].map((r) => ({ idProducto: Number(r.querySelector(".oi-prod").value), cantidad: parseInt(r.querySelector(".oi-qty").value, 10) }));
+        const dto = {
+          idCliente: Number($("oCliente").value),
+          idEstadoOrden: Number($("oEstado").value),
+          fechaPedido: $("oPedido").value,
+          fechaEntrega: $("oEntrega").value || null,
+          items,
+        };
+        if (!dto.idCliente) { Swal.showValidationMessage("Elegí un cliente."); return false; }
+        if (!dto.fechaPedido) { Swal.showValidationMessage("La fecha del pedido es obligatoria."); return false; }
+        if (dto.fechaEntrega && dto.fechaEntrega < dto.fechaPedido) { Swal.showValidationMessage("La entrega no puede ser anterior al pedido."); return false; }
+        if (items.some((i) => !(i.cantidad > 0))) { Swal.showValidationMessage("Las cantidades deben ser mayores a 0."); return false; }
+        return dto;
+      },
+    });
+    if (!value) return;
+    try {
+      await (id ? Api.editarOrden(id, value) : Api.crearOrden(value));
+    } catch (e) { fail("No se pudo guardar la orden", e); return; }
+    loadHistory(true); loadResumen();
+    UI.notify("success", id ? "Orden actualizada" : "Orden creada");
+  }
+
+  $("ordNueva").addEventListener("click", () => editOrder(null));
+  $("histBody").addEventListener("click", async (e) => {
+    const ed = e.target.closest("[data-oedit]");
+    if (ed) { editOrder(Number(ed.dataset.oedit)); return; }
+    const b = e.target.closest("[data-odel]");
+    if (!b) return;
+    const id = Number(b.dataset.odel);
+    const ok = await UI.confirmBox({ title: "¿Eliminar la orden?", text: `Se eliminará la orden #${id} con su detalle y seguimiento.`, confirmText: "Sí, eliminar", icon: "warning", danger: true });
+    if (!ok) return;
+    try { await Api.eliminarOrden(id); } catch (err) { fail("No se pudo eliminar la orden", err); return; }
+    loadHistory(true); loadResumen();
+    UI.notify("success", "Orden eliminada");
+  });
 
   /* ---------- Inventario (AUTOPARTE + PRODUCTO + PRECIO_PRODUCTO vigente) ---------- */
   const catOptions = (sel) => cats.map((c) => `<option value="${c.idCategoria}" ${c.idCategoria === sel ? "selected" : ""}>${UI.esc(c.nombre)}</option>`).join("");
@@ -467,7 +550,7 @@ function initAdmin() {
   ]);
   document.addEventListener("themechange", renderCharts);
 
-  $("histBody").innerHTML = UI.stateRow(6, "Cargando…");
+  $("histBody").innerHTML = UI.stateRow(7, "Cargando…");
   $("lowStock").innerHTML = UI.stateRow(5, "Cargando…");
   $("invBody").innerHTML = UI.stateRow(6, "Cargando…");
 

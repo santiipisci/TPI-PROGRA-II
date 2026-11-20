@@ -71,8 +71,7 @@ TPI-PROGRA-II/
 │       ├── WebAPI-TP-PROGII/     # API: controllers, middleware, seguridad, configuración
 │       └── tpRepository/         # Modelos, DbContext, DTOs, repositorios y servicios
 ├── Base de Datos/
-│   ├── db_Automotriz_completo.sql
-│   └── db_Automotriz_completo_fix.sql
+│   └── db_Automotriz_completo_final.sql
 └── Frontend/
     └── AutopartesFront/
         └── autopartes/           # Sitio estático (pages, js, styles) y API_CONTRATO.md
@@ -91,7 +90,7 @@ El backend sigue una arquitectura en capas:
 
 ## Base de datos
 
-El script crea la base `db_Automotriz_final` con las tablas del dominio, entre ellas: `CLIENTE`, `USUARIO_ADMIN`, `MARCA`, `MODELO`, `VEHICULO`, `PRODUCTO`, `AUTOPARTE`, `AUTOPARTE_MODELO`, `PRECIO_PRODUCTO`, `ORDEN_PEDIDO`, `DETALLE_ORDEN_PEDIDO`, `ESCALA_DESCUENTO_MAYORISTA`, `FACTURA`, `AUTOPLAN` y `CUOTA_AUTOPLAN`, además de las tablas de catálogos (tipos, estados, categorías).
+El script crea la base `db_Automotriz_final` con las tablas del dominio, entre ellas: `CLIENTE`, `USUARIO_ADMIN`, `MARCA`, `MODELO`, `VEHICULO`, `PRODUCTO`, `AUTOPARTE`, `AUTOPARTE_MODELO`, `PRECIO_PRODUCTO`, `ORDEN_PEDIDO`, `DETALLE_ORDEN_PEDIDO`, `SEGUIMIENTO_ORDEN`, `ESCALA_DESCUENTO_MAYORISTA`, `FACTURA`, `AUTOPLAN` y `CUOTA_AUTOPLAN`, además de las tablas de catálogos (tipos, estados, categorías).
 
 
 ## Puesta en marcha
@@ -106,8 +105,7 @@ El script crea la base `db_Automotriz_final` con las tablas del dominio, entre e
 ### 1. Base de datos
 
 1. Abrir SQL Server Management Studio y conectarse a la instancia local.
-2. Ejecutar `Base de Datos/db_Automotriz_completo.sql`.
-3. Ejecutar `Base de Datos/db_Automotriz_completo_fix.sql`.
+2. Ejecutar `Base de Datos/db_Automotriz_completo_final.sql` (recrea la base `db_Automotriz_final` desde cero).
 
 ### 2. Backend
 
