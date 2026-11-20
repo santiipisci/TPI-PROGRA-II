@@ -241,6 +241,29 @@ function initAdmin() {
 
   /* ---------- Inventario (AUTOPARTE + PRODUCTO + PRECIO_PRODUCTO vigente) ---------- */
   const catOptions = (sel) => cats.map((c) => `<option value="${c.idCategoria}" ${c.idCategoria === sel ? "selected" : ""}>${UI.esc(c.nombre)}</option>`).join("");
+  const CAT_PREFIX = { "Frenos": "FRE", "Suspensión": "SUS", "Motor": "MOT", "Filtros": "FIL", "Transmisión": "TRA", "Eléctrico": "ELE", "Escape": "ESC", "Refrigeración": "REF" };
+
+  function catPrefix(nombre) {
+    if (CAT_PREFIX[nombre]) return CAT_PREFIX[nombre];
+    const base = String(nombre || "CAT").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z]/g, "").toUpperCase();
+    return (base.slice(0, 3) || "CAT").padEnd(3, "X");
+  }
+
+  function nextPartCode(idCategoria) {
+    const cat = cats.find((c) => String(c.idCategoria) === String(idCategoria));
+    const prefix = cat ? catPrefix(cat.nombre) : "AUT";
+    let max = 0;
+    parts.filter((p) => String(p.idCategoria) === String(idCategoria)).forEach((p) => {
+      const m = String(p.codigoParte || "").match(/(\d+)$/);
+      if (m) max = Math.max(max, parseInt(m[1], 10));
+    });
+    return `${prefix}-${String(max + 1).padStart(3, "0")}`;
+  }
+
+  function updateNextPartCode() {
+    if (!$("npCat") || !$("npSku") || !cats.length) return;
+    $("npSku").value = nextPartCode($("npCat").value);
+  }
 
   function renderInventory() {
     const q = $("invBuscar").value.trim().toLowerCase();
@@ -268,6 +291,7 @@ function initAdmin() {
   function renderCategoryControls() {
     $("npCat").innerHTML = catOptions();
     $("invCat").innerHTML = `<option value="">Todas las categorías</option>` + cats.map((c) => `<option value="${c.idCategoria}">${UI.esc(c.nombre)}</option>`).join("");
+    updateNextPartCode();
   }
 
   async function reloadParts() {
@@ -301,6 +325,7 @@ function initAdmin() {
   });
   $("invBuscar").addEventListener("input", renderInventory);
   $("invCat").addEventListener("change", renderInventory);
+  $("npCat").addEventListener("change", updateNextPartCode);
 
   async function editPart(p) {
     const img = p.imagenUrl || "";
@@ -404,6 +429,7 @@ function initAdmin() {
       await Api.crearAutoparte(dto); // el backend valida, p. ej. código duplicado (409)
       form.reset();
       await reloadParts();
+      updateNextPartCode();
       UI.notify("success", "Autoparte agregada");
     } catch (err) {
       UI.alertBox(err.status === 409 ? "warning" : "error", err.status === 409 ? "Código duplicado" : "No se pudo agregar", err.message);
