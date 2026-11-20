@@ -5,7 +5,7 @@ UI.init("");
 
 (async () => {
   const $ = (id) => document.getElementById(id);
-  Animations.init([[".glass.p-4", "zoom", 0]]);
+  Animations.init([[".mtx-glass.p-4", "zoom", 0]]);
 
   // Si ya hay sesión de cliente, no tiene sentido mostrar el formulario
   try { if (await Api.clienteActual()) { location.replace("index.html"); return; } } catch (e) { /* sin sesión */ }

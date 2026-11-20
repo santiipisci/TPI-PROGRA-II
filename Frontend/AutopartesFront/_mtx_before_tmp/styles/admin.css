@@ -1,0 +1,40 @@
+/* ========= Panel de administración ========= */
+.admin-shell { padding-top: 1.5rem; padding-bottom: 3rem; }
+
+.admin-tabs {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.4rem;
+  overflow-x: auto;
+}
+.admin-tabs .nav-link {
+  color: inherit;
+  border-radius: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.admin-tabs .nav-link.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(230, 57, 70, 0.35);
+}
+
+.kpi { padding: 1.25rem; height: 100%; }
+.kpi .kpi-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+.kpi .kpi-value { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; }
+
+.chart-box { position: relative; height: 300px; }
+
+.stock-input { width: 90px; }
+
+.assoc-list { max-height: 520px; overflow-y: auto; }
+.assoc-model {
+  cursor: pointer;
+  padding: 0.65rem 0.9rem;
+  border-radius: 0.8rem;
+  border: 1px solid transparent;
+  transition: background 0.2s;
+}
+.assoc-model:hover { background: rgba(230, 57, 70, 0.08); }
+.assoc-model.active { background: rgba(230, 57, 70, 0.14); border-color: rgba(230, 57, 70, 0.4); }
+

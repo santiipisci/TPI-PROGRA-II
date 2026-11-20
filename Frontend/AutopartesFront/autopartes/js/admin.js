@@ -98,7 +98,7 @@ function initAdmin() {
   function renderLowStock() {
     const low = parts.filter(UI.isLowStock).sort((a, b) => a.stockActual - b.stockActual);
     $("lowStock").innerHTML = low.length
-      ? low.map((p) => `<tr><td class="part-sku">${UI.esc(p.codigoParte)}</td><td>${UI.esc(p.descripcion)}</td><td>${UI.esc(p.categoria)}</td><td class="text-end text-muted-2">${p.stockMinimo}</td><td class="text-end"><span class="badge ${p.stockActual <= 0 ? "text-bg-danger" : "text-bg-warning"}">${p.stockActual}</span></td></tr>`).join("")
+      ? low.map((p) => `<tr><td class="mtx-part-sku">${UI.esc(p.codigoParte)}</td><td>${UI.esc(p.descripcion)}</td><td>${UI.esc(p.categoria)}</td><td class="text-end mtx-text-muted-2">${p.stockMinimo}</td><td class="text-end"><span class="badge ${p.stockActual <= 0 ? "text-bg-danger" : "text-bg-warning"}">${p.stockActual}</span></td></tr>`).join("")
       : UI.stateRow(5, "Sin alertas de stock.");
   }
 
@@ -117,15 +117,15 @@ function initAdmin() {
       ? hist.items.map((o) => {
           const st = estadoStyle(o.estado);
           return `<tr>
-            <td class="part-sku">#${o.idOrdenPedido}</td>
+            <td class="mtx-part-sku">#${o.idOrdenPedido}</td>
             <td class="text-nowrap">${UI.fecha(o.fechaPedido)}</td>
             <td>${UI.esc(o.cliente)}</td>
             <td>${UI.esc(o.tipoCliente)}</td>
             <td><span class="badge ${st.badge}">${UI.esc(o.estado)}</span></td>
             <td class="text-end fw-semibold text-nowrap">${UI.money(o.total)}</td>
             <td class="text-end text-nowrap">
-              <button class="btn btn-sm btn-glass me-1" data-oedit="${o.idOrdenPedido}" title="Editar" aria-label="Editar orden ${o.idOrdenPedido}"><i class="bi bi-pencil"></i></button>
-              <button class="btn btn-sm btn-glass text-danger" data-odel="${o.idOrdenPedido}" title="Eliminar" aria-label="Eliminar orden ${o.idOrdenPedido}"><i class="bi bi-trash"></i></button>
+              <button class="btn btn-sm mtx-btn-glass me-1" data-oedit="${o.idOrdenPedido}" title="Editar" aria-label="Editar orden ${o.idOrdenPedido}"><i class="bi bi-pencil"></i></button>
+              <button class="btn btn-sm mtx-btn-glass text-danger" data-odel="${o.idOrdenPedido}" title="Eliminar" aria-label="Eliminar orden ${o.idOrdenPedido}"><i class="bi bi-trash"></i></button>
             </td>
           </tr>`;
         }).join("")
@@ -162,10 +162,10 @@ function initAdmin() {
 
   function itemRow(it = {}) {
     const list = it.idProducto && !parts.some((p) => p.idProducto === it.idProducto) ? [...parts, { idProducto: it.idProducto, codigoParte: "—", descripcion: it.descripcion }] : parts;
-    return `<div class="d-flex gap-2 mb-2 oi-row">
-      <select class="form-select form-select-sm oi-prod">${list.map((p) => `<option value="${p.idProducto}" ${p.idProducto === it.idProducto ? "selected" : ""}>${UI.esc(p.codigoParte)} · ${UI.esc(p.descripcion)}</option>`).join("")}</select>
-      <input type="number" min="1" class="form-control form-control-sm oi-qty" style="width:90px" value="${it.cantidad || 1}">
-      <button type="button" class="btn btn-sm btn-glass text-danger oi-del" aria-label="Quitar autoparte"><i class="bi bi-x-lg"></i></button>
+    return `<div class="d-flex gap-2 mb-2 mtx-oi-row">
+      <select class="form-select form-select-sm mtx-oi-prod">${list.map((p) => `<option value="${p.idProducto}" ${p.idProducto === it.idProducto ? "selected" : ""}>${UI.esc(p.codigoParte)} · ${UI.esc(p.descripcion)}</option>`).join("")}</select>
+      <input type="number" min="1" class="form-control form-control-sm mtx-oi-qty" value="${it.cantidad || 1}">
+      <button type="button" class="btn btn-sm mtx-btn-glass text-danger mtx-oi-del" aria-label="Quitar autoparte"><i class="bi bi-x-lg"></i></button>
     </div>`;
   }
 
@@ -184,7 +184,7 @@ function initAdmin() {
             <div class="col-sm-6"><label class="form-label small" for="oPedido">Fecha del pedido</label><input id="oPedido" type="date" class="form-control" value="${o ? o.fechaPedido : new Date().toLocaleDateString("sv-SE")}"></div>
             <div class="col-sm-6"><label class="form-label small" for="oEntrega">Fecha de entrega</label><input id="oEntrega" type="date" class="form-control" value="${(o && o.fechaEntrega) || ""}"></div>
           </div>
-          <div class="d-flex justify-content-between align-items-center mb-2"><span class="form-label small mb-0">Autopartes</span><button type="button" id="oAdd" class="btn btn-sm btn-glass"><i class="bi bi-plus-lg me-1"></i>Agregar</button></div>
+          <div class="d-flex justify-content-between align-items-center mb-2"><span class="form-label small mb-0">Autopartes</span><button type="button" id="oAdd" class="btn btn-sm mtx-btn-glass"><i class="bi bi-plus-lg me-1"></i>Agregar</button></div>
           <div id="oItems">${(o && o.items.length ? o.items : [{}]).map((it) => itemRow(it)).join("")}</div>
         </div>`,
       showCancelButton: true,
@@ -193,16 +193,16 @@ function initAdmin() {
       reverseButtons: true,
       buttonsStyling: false,
       focusConfirm: false,
-      customClass: { confirmButton: "btn btn-accent mx-1", cancelButton: "btn btn-glass mx-1" },
+      customClass: { confirmButton: "btn mtx-btn-accent mx-1", cancelButton: "btn mtx-btn-glass mx-1" },
       didOpen: () => {
         $("oAdd").onclick = () => $("oItems").insertAdjacentHTML("beforeend", itemRow());
         $("oItems").onclick = (e) => {
-          const del = e.target.closest(".oi-del");
-          if (del && $("oItems").children.length > 1) del.closest(".oi-row").remove();
+          const del = e.target.closest(".mtx-oi-del");
+          if (del && $("oItems").children.length > 1) del.closest(".mtx-oi-row").remove();
         };
       },
       preConfirm: () => {
-        const items = [...document.querySelectorAll(".oi-row")].map((r) => ({ idProducto: Number(r.querySelector(".oi-prod").value), cantidad: parseInt(r.querySelector(".oi-qty").value, 10) }));
+        const items = [...document.querySelectorAll(".mtx-oi-row")].map((r) => ({ idProducto: Number(r.querySelector(".mtx-oi-prod").value), cantidad: parseInt(r.querySelector(".mtx-oi-qty").value, 10) }));
         const dto = {
           idCliente: Number($("oCliente").value),
           idEstadoOrden: Number($("oEstado").value),
@@ -253,14 +253,14 @@ function initAdmin() {
     $("invBody").innerHTML = list
       .map((p) => `
       <tr>
-        <td class="part-sku">${UI.esc(p.codigoParte)}</td>
+        <td class="mtx-part-sku">${UI.esc(p.codigoParte)}</td>
         <td>${UI.esc(p.descripcion)}</td>
         <td>${UI.esc(p.categoria)}</td>
         <td>${p.precio != null ? UI.money(p.precio) : "–"}</td>
-        <td><input type="number" min="0" class="form-control form-control-sm stock-input" data-id="${p.idProducto}" value="${p.stockActual}"></td>
+        <td><input type="number" min="0" class="form-control form-control-sm mtx-stock-input" data-id="${p.idProducto}" value="${p.stockActual}"></td>
         <td class="text-end text-nowrap">
-          <button class="btn btn-sm btn-glass me-1" data-edit="${p.idProducto}" title="Editar" aria-label="Editar ${UI.esc(p.descripcion)}"><i class="bi bi-pencil"></i></button>
-          <button class="btn btn-sm btn-glass text-danger" data-del="${p.idProducto}" title="Dar de baja" aria-label="Dar de baja ${UI.esc(p.descripcion)}"><i class="bi bi-trash"></i></button>
+          <button class="btn btn-sm mtx-btn-glass me-1" data-edit="${p.idProducto}" title="Editar" aria-label="Editar ${UI.esc(p.descripcion)}"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-sm mtx-btn-glass text-danger" data-del="${p.idProducto}" title="Dar de baja" aria-label="Dar de baja ${UI.esc(p.descripcion)}"><i class="bi bi-trash"></i></button>
         </td>
       </tr>`).join("");
   }
@@ -281,7 +281,7 @@ function initAdmin() {
   }
 
   $("invBody").addEventListener("change", async (e) => {
-    const inp = e.target.closest(".stock-input");
+    const inp = e.target.closest(".mtx-stock-input");
     if (!inp) return;
     const p = parts.find((x) => x.idProducto === Number(inp.dataset.id));
     if (!p) return;
@@ -308,7 +308,7 @@ function initAdmin() {
       title: "Editar autoparte",
       html: `
         <div class="text-start">
-          <p class="small text-muted-2 mb-3">Código: <span class="part-sku">${UI.esc(p.codigoParte)}</span></p>
+          <p class="small mtx-text-muted-2 mb-3">Código: <span class="mtx-part-sku">${UI.esc(p.codigoParte)}</span></p>
           <label class="form-label small" for="epNombre">Descripción</label>
           <input id="epNombre" class="form-control mb-3" maxlength="150" value="${UI.esc(p.descripcion)}">
           <label class="form-label small" for="epCat">Categoría</label>
@@ -318,8 +318,8 @@ function initAdmin() {
           <label class="form-label small" for="epImagen">Imagen (URL)</label>
           <input id="epImagen" type="url" class="form-control mb-2" maxlength="255" value="${UI.esc(img)}" placeholder="https://...">
           <div class="mb-3 text-center">
-            <img id="epPreview" src="${UI.esc(img)}" alt="Vista previa" class="img-fluid rounded ${img ? "" : "d-none"}" style="max-height: 160px; object-fit: contain;">
-            <div id="epPreviewEmpty" class="small text-muted-2 ${img ? "d-none" : ""}">Sin imagen para mostrar</div>
+            <img id="epPreview" src="${UI.esc(img)}" alt="Vista previa" class="img-fluid rounded mtx-ep-preview ${img ? "" : "d-none"}">
+            <div id="epPreviewEmpty" class="small mtx-text-muted-2 ${img ? "d-none" : ""}">Sin imagen para mostrar</div>
           </div>
           <div class="form-text">Al cambiar el precio, el sistema registra uno nuevo en el historial de precios. Si dejás la URL vacía, se quitará la imagen.</div>
         </div>`,
@@ -329,7 +329,7 @@ function initAdmin() {
       reverseButtons: true,
       buttonsStyling: false,
       focusConfirm: false,
-      customClass: { confirmButton: "btn btn-accent mx-1", cancelButton: "btn btn-glass mx-1" },
+      customClass: { confirmButton: "btn mtx-btn-accent mx-1", cancelButton: "btn mtx-btn-glass mx-1" },
       didOpen: () => {
         const input = document.getElementById("epImagen");
         const preview = document.getElementById("epPreview");
@@ -420,11 +420,11 @@ function initAdmin() {
     const sorted = [...models].sort((a, b) => (a.marca + a.nombre).localeCompare(b.marca + b.nombre));
     $("assocModels").innerHTML = sorted.length
       ? sorted.map((m) => `
-      <div class="assoc-model ${m.idModelo === selectedModel ? "active" : ""}" data-id="${m.idModelo}">
+      <div class="mtx-assoc-model ${m.idModelo === selectedModel ? "active" : ""}" data-id="${m.idModelo}">
         <div class="fw-semibold">${UI.esc(m.marca)} ${UI.esc(m.nombre)}</div>
-        <div class="small text-muted-2">${yearsOf(m) ? yearsOf(m) + " · " : ""}${countFor(m.idModelo)} partes</div>
+        <div class="small mtx-text-muted-2">${yearsOf(m) ? yearsOf(m) + " · " : ""}${countFor(m.idModelo)} partes</div>
       </div>`).join("")
-      : `<div class="small text-muted-2 p-2">Todavía no hay modelos cargados.</div>`;
+      : `<div class="small mtx-text-muted-2 p-2">Todavía no hay modelos cargados.</div>`;
     $("brandList").innerHTML = [...new Set(models.map((m) => m.marca))].sort().map((b) => `<option value="${UI.esc(b)}"></option>`).join("");
   }
 
@@ -437,15 +437,15 @@ function initAdmin() {
     $("assocParts").innerHTML = parts
       .map((p) => `
       <div class="col-md-6">
-        <label class="glass p-2 px-3 d-flex align-items-center gap-2 w-100" style="cursor:pointer;border-radius:.8rem">
+        <label class="mtx-glass p-2 px-3 d-flex align-items-center gap-2 w-100 mtx-assoc-part">
           <input class="form-check-input mt-0" type="checkbox" data-part="${p.idProducto}" ${p.modelos.includes(m.idModelo) ? "checked" : ""}>
-          <span><span class="d-block small fw-semibold">${UI.esc(p.descripcion)}</span><span class="part-sku">${UI.esc(p.codigoParte)} · ${UI.esc(p.categoria)}</span></span>
+          <span><span class="d-block small fw-semibold">${UI.esc(p.descripcion)}</span><span class="mtx-part-sku">${UI.esc(p.codigoParte)} · ${UI.esc(p.categoria)}</span></span>
         </label>
       </div>`).join("");
   }
 
   $("assocModels").addEventListener("click", (e) => {
-    const el = e.target.closest(".assoc-model");
+    const el = e.target.closest(".mtx-assoc-model");
     if (!el) return;
     selectedModel = Number(el.dataset.id);
     renderAssocModels(); renderAssocParts();
@@ -524,7 +524,7 @@ function initAdmin() {
       reverseButtons: true,
       buttonsStyling: false,
       focusConfirm: false,
-      customClass: { confirmButton: "btn btn-accent mx-1", cancelButton: "btn btn-glass mx-1" },
+      customClass: { confirmButton: "btn mtx-btn-accent mx-1", cancelButton: "btn mtx-btn-glass mx-1" },
       preConfirm: () => {
         const marca = document.getElementById("emMarca").value.trim();
         const nombre = document.getElementById("emNombre").value.trim();
@@ -559,7 +559,7 @@ function initAdmin() {
   }
 
   $("assocModels").addEventListener("contextmenu", (e) => {
-    const el = e.target.closest(".assoc-model");
+    const el = e.target.closest(".mtx-assoc-model");
     if (!el) return;
     e.preventDefault();
     const idModelo = Number(el.dataset.id);
@@ -574,7 +574,7 @@ function initAdmin() {
       cancelButtonText: "Cancelar",
       reverseButtons: true,
       buttonsStyling: false,
-      customClass: { confirmButton: "btn btn-accent mx-1", denyButton: "btn btn-glass btn-swal-danger mx-1", cancelButton: "btn btn-glass mx-1" },
+      customClass: { confirmButton: "btn mtx-btn-accent mx-1", denyButton: "btn mtx-btn-glass mtx-btn-swal-danger mx-1", cancelButton: "btn mtx-btn-glass mx-1" },
     }).then((result) => {
       if (result.isConfirmed) editModel(m);
       else if (result.isDenied) deleteModel(m);
@@ -587,9 +587,9 @@ function initAdmin() {
   }
 
   Animations.init([
-    [".admin-shell > .d-flex", "up", 0],
-    [".admin-tabs", "up", 0],
-    ["#tab-dashboard .kpi", "up", 90],
+    [".mtx-admin-shell > .d-flex", "up", 0],
+    [".mtx-admin-tabs", "up", 0],
+    ["#tab-dashboard .mtx-kpi", "up", 90],
     ["#tab-dashboard .row.g-4 > *", "up", 120],
   ]);
   document.addEventListener("themechange", renderCharts);

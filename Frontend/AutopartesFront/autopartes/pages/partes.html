@@ -14,44 +14,44 @@
 
   <main class="container py-5">
     <div class="mb-4">
-      <span class="eyebrow">Catálogo</span>
-      <h1 class="section-title">Partes en venta</h1>
-      <p class="text-muted-2">Filtrá por marca, modelo y año para ver solo las autopartes compatibles con tu vehículo.</p>
+      <span class="mtx-eyebrow">Catálogo</span>
+            <h1 class="mtx-section-title">Partes en venta</h1>
+            <p class="mtx-text-muted-2">Filtrá por marca, modelo y año para ver solo las autopartes compatibles con tu vehículo.</p>
     </div>
 
-    <div class="glass filter-bar mb-4">
+    <div class="mtx-glass mtx-filter-bar mb-4">
       <form id="filters" class="row g-3 align-items-end">
         <div class="col-6 col-lg-3"><label class="form-label small">Marca</label><select id="fMarca" class="form-select"></select></div>
         <div class="col-6 col-lg-3"><label class="form-label small">Modelo</label><select id="fModelo" class="form-select" disabled></select></div>
         <div class="col-6 col-lg-2"><label class="form-label small">Año</label><select id="fAnio" class="form-select"></select></div>
         <div class="col-6 col-lg-3"><label class="form-label small">Buscar</label><input id="fTexto" type="search" class="form-control" placeholder="Nombre o código"></div>
-        <div class="col-12 col-lg-1 d-grid"><button type="button" id="fLimpiar" class="btn btn-glass" title="Limpiar filtros"><i class="bi bi-x-circle"></i></button></div>
+        <div class="col-12 col-lg-1 d-grid"><button type="button" id="fLimpiar" class="btn mtx-btn-glass" title="Limpiar filtros"><i class="bi bi-x-circle"></i></button></div>
       </form>
       <div id="cats" class="d-flex flex-wrap gap-2 mt-3"></div>
     </div>
 
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-      <p class="small text-muted-2 mb-0" id="resultCount" aria-live="polite"></p>
-      <div class="view-switch d-flex align-items-center gap-2" role="group" aria-label="Cambiar tipo de vista">
-        <label class="view-label active" id="vlCards" for="viewSwitch"><i class="bi bi-grid me-1"></i>Cards</label>
+      <p class="small mtx-text-muted-2 mb-0" id="resultCount" aria-live="polite"></p>
+            <div class="mtx-view-switch d-flex align-items-center gap-2" role="group" aria-label="Cambiar tipo de vista">
+        <label class="mtx-view-label active" id="vlCards" for="viewSwitch"><i class="bi bi-grid me-1"></i>Cards</label>
         <div class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" id="viewSwitch" aria-label="Alternar entre vista de cards y vista de grilla"></div>
-        <label class="view-label" id="vlTable" for="viewSwitch"><i class="bi bi-table me-1"></i>Grilla</label>
+        <label class="mtx-view-label" id="vlTable" for="viewSwitch"><i class="bi bi-table me-1"></i>Grilla</label>
       </div>
     </div>
     <div class="row g-4" id="partsGrid"></div>
-    <div id="partsTableWrap" class="glass p-3 d-none">
+    <div id="partsTableWrap" class="mtx-glass p-3 d-none">
       <div class="table-responsive">
-        <table class="table table-glass align-middle">
+        <table class="table mtx-table-glass align-middle">
           <thead><tr><th>Código</th><th>Autoparte</th><th>Categoría</th><th>Compatible con</th><th class="text-end">Precio</th><th>Disponibilidad</th><th></th></tr></thead>
           <tbody id="partsTableBody"></tbody>
         </table>
       </div>
     </div>
-    <div id="emptyState" class="glass p-5 text-center mt-4 d-none">
-      <i class="bi bi-search fs-1 text-muted-2"></i>
+    <div id="emptyState" class="mtx-glass p-5 text-center mt-4 d-none">
+          <i class="bi bi-search fs-1 mtx-text-muted-2"></i>
       <h2 class="h5 mt-2">No encontramos autopartes con esos filtros</h2>
-      <p class="text-muted-2 mb-3">Probá con otro año o consultanos: podemos fabricarla o conseguirla.</p>
-      <a href="contacto.html" class="btn btn-accent">Consultar disponibilidad</a>
+      <p class="mtx-text-muted-2 mb-3">Probá con otro año o consultanos: podemos fabricarla o conseguirla.</p>
+      <a href="contacto.html" class="btn mtx-btn-accent">Consultar disponibilidad</a>
     </div>
   </main>
 

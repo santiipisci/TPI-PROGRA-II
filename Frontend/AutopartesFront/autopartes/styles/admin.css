@@ -1,40 +1,49 @@
 /* ========= Panel de administración ========= */
-.admin-shell { padding-top: 1.5rem; padding-bottom: 3rem; }
+.mtx-admin-shell { padding-top: 1.5rem; padding-bottom: 3rem; }
 
-.admin-tabs {
+/* El color y el peso de la fuente de las pestañas se cambian con las variables de .nav de Bootstrap */
+.mtx-admin-tabs {
+  --bs-nav-link-color: var(--bs-body-color);
+  --bs-nav-link-hover-color: var(--bs-body-color);
+  --bs-nav-link-font-weight: 600;
   display: flex;
   gap: 0.4rem;
   padding: 0.4rem;
   overflow-x: auto;
 }
-.admin-tabs .nav-link {
-  color: inherit;
+.mtx-admin-tabs .nav-link {
   border-radius: 0.8rem;
-  font-weight: 600;
   white-space: nowrap;
 }
-.admin-tabs .nav-link.active {
+.mtx-admin-tabs .nav-link.active {
+  --bs-nav-link-color: #fff;
+  --bs-nav-link-hover-color: #fff;
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  color: #fff;
   box-shadow: 0 6px 16px rgba(230, 57, 70, 0.35);
 }
 
-.kpi { padding: 1.25rem; height: 100%; }
-.kpi .kpi-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
-.kpi .kpi-value { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; }
+.mtx-kpi { padding: 1.25rem; height: 100%; }
+.mtx-kpi .mtx-kpi-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+.mtx-kpi .mtx-kpi-value { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; }
 
-.chart-box { position: relative; height: 300px; }
+.mtx-chart-box { position: relative; height: 300px; }
 
-.stock-input { width: 90px; }
+.mtx-stock-input, .mtx-oi-qty { width: 90px; }
 
-.assoc-list { max-height: 520px; overflow-y: auto; }
-.assoc-model {
+.mtx-hist-search { width: 210px; }
+
+.mtx-ep-preview { max-height: 160px; object-fit: contain; }
+
+.mtx-assoc-list { max-height: 520px; overflow-y: auto; }
+.mtx-assoc-model {
   cursor: pointer;
   padding: 0.65rem 0.9rem;
   border-radius: 0.8rem;
   border: 1px solid transparent;
   transition: background 0.2s;
 }
-.assoc-model:hover { background: rgba(230, 57, 70, 0.08); }
-.assoc-model.active { background: rgba(230, 57, 70, 0.14); border-color: rgba(230, 57, 70, 0.4); }
+.mtx-assoc-model:hover { background: rgba(230, 57, 70, 0.08); }
+.mtx-assoc-model.active { background: rgba(230, 57, 70, 0.14); border-color: rgba(230, 57, 70, 0.4); }
+
+.mtx-assoc-part { cursor: pointer; border-radius: 0.8rem; }
 
