@@ -12,6 +12,7 @@ public class ClienteService : IClienteService
 {
     private static readonly Regex EmailRegex =
         new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex TelefonoRegex = new(@"^\d{7,15}$", RegexOptions.Compiled);
 
     private readonly IClienteRepository _repo;
 
@@ -29,6 +30,8 @@ public class ClienteService : IClienteService
             throw new BusinessException("El documento o CUIT no puede superar los 13 caracteres.");
         if (string.IsNullOrWhiteSpace(dto.Email) || !EmailRegex.IsMatch(dto.Email.Trim()))
             throw new BusinessException("El email no tiene un formato válido.");
+        if (!string.IsNullOrWhiteSpace(dto.Telefono) && !TelefonoRegex.IsMatch(dto.Telefono.Trim()))
+            throw new BusinessException("El teléfono debe contener solo números (entre 7 y 15 dígitos).");
         if (string.IsNullOrWhiteSpace(dto.Clave) || dto.Clave.Length < 6)
             throw new BusinessException("La clave debe tener al menos 6 caracteres.");
 

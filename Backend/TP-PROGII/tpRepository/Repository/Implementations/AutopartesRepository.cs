@@ -92,26 +92,53 @@ public class AutopartesRepository : IAutopartesRepository
         autoparte.IdCategoria = dto.IdCategoria;
         autoparte.IdProductoNavigation.Descripcion = dto.Descripcion.Trim();
 
-        // Actualizar precio: cerrar el precio actual y crear uno nuevo
+        var hoy = DateOnly.FromDateTime(DateTime.Today);
         var precioActual = autoparte.IdProductoNavigation.PrecioProductos
             .FirstOrDefault(p => p.FechaHasta == null);
 
-        if (precioActual != null && precioActual.Precio != dto.Precio)
+        if (precioActual == null || precioActual.Precio == dto.Precio)
         {
-            precioActual.FechaHasta = DateOnly.FromDateTime(DateTime.Today).AddDays(-1);
-
-            var nuevoPrecio = new PrecioProducto
+            if (precioActual == null)
             {
-                IdProducto = idProducto,
-                Precio = dto.Precio,
-                FechaDesde = DateOnly.FromDateTime(DateTime.Today),
-                FechaHasta = null,
-            };
+                _context.PrecioProductos.Add(new PrecioProducto
+                {
+                    IdProducto = idProducto,
+                    Precio = dto.Precio,
+                    FechaDesde = hoy,
+                    FechaHasta = null,
+                });
+            }
 
-            _context.PrecioProductos.Add(nuevoPrecio);
+            await _context.SaveChangesAsync();
+            return;
         }
 
+        if (precioActual.FechaDesde >= hoy)
+        {
+            // El precio vigente empezo hoy: ya existe un registro con (producto, fechaDesde = hoy),
+            // asi que se corrige en el lugar en vez de crear otro.
+            precioActual.Precio = dto.Precio;
+            await _context.SaveChangesAsync();
+            return;
+        }
+
+        // Historial: se cierra el vigente y recien despues se inserta el nuevo
+        // (la base permite un solo precio con fechaHasta NULL por producto).
+        await using var tx = await _context.Database.BeginTransactionAsync();
+
+        precioActual.FechaHasta = hoy.AddDays(-1);
         await _context.SaveChangesAsync();
+
+        _context.PrecioProductos.Add(new PrecioProducto
+        {
+            IdProducto = idProducto,
+            Precio = dto.Precio,
+            FechaDesde = hoy,
+            FechaHasta = null,
+        });
+        await _context.SaveChangesAsync();
+
+        await tx.CommitAsync();
     }
 
     public async Task ActualizarStockAsync(int idProducto, int stockActual)

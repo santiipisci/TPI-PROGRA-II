@@ -113,6 +113,12 @@ body::after  { width: 760px; height: 760px; bottom: -380px; left: -220px; backgr
 }
 .btn-glass:hover { background: var(--glass-bg-strong); color: var(--accent); }
 
+.swal2-actions .btn { min-width: 6.5rem; padding: 0.5rem 1.25rem; border-radius: 0.8rem; font-weight: 600; box-shadow: none; }
+.swal2-actions .btn-accent { box-shadow: 0 6px 18px rgba(230, 57, 70, 0.35); }
+.swal2-actions .btn-danger { --bs-btn-bg: #c92e3b; --bs-btn-border-color: #c92e3b; --bs-btn-hover-bg: #b02733; --bs-btn-hover-border-color: #b02733; }
+.btn-swal-danger { color: var(--accent); border-color: var(--accent); }
+.btn-swal-danger:hover { background: var(--accent); color: #fff; }
+
 .theme-toggle { width: 40px; height: 40px; padding: 0; display: inline-grid; place-items: center; border-radius: 50%; }
 
 /* ---------- Formularios ---------- */

@@ -81,12 +81,14 @@ public class ModelosRepository : IModelosRepository
         var nombreMarca = dto.Marca.Trim();
         var nombreModelo = dto.Nombre.Trim();
 
-        if (await ExisteModeloAsync(nombreMarca, nombreModelo) && 
-            (modelo.Nombre != nombreModelo || modelo.IdMarcaNavigation.Nombre != nombreMarca))
+        var duplicado = await _context.Modelos.AnyAsync(m =>
+            m.IdModelo != id &&
+            m.IdMarcaNavigation.Nombre == nombreMarca &&
+            m.Nombre == nombreModelo);
+        if (duplicado)
             throw new BusinessException("El modelo ya existe para esa marca.");
 
         var marca = await _context.Marcas.FirstOrDefaultAsync(m => m.Nombre == nombreMarca);
-
         if (marca == null)
         {
             marca = new Marca { Nombre = nombreMarca };
@@ -102,10 +104,18 @@ public class ModelosRepository : IModelosRepository
 
     public async Task EliminarModeloAsync(int id)
     {
-        var modelo = await _context.Modelos.FirstOrDefaultAsync(m => m.IdModelo == id);
+        var modelo = await _context.Modelos
+            .Include(m => m.IdProductos)
+            .Include(m => m.Vehiculos)
+            .FirstOrDefaultAsync(m => m.IdModelo == id);
         if (modelo == null)
             throw new NotFoundException("El modelo no existe.");
 
+        if (modelo.Vehiculos.Count > 0)
+            throw new BusinessException("No se puede eliminar el modelo porque tiene vehículos registrados.");
+
+        // Quita primero las asociaciones con autopartes (tabla intermedia).
+        modelo.IdProductos.Clear();
         _context.Modelos.Remove(modelo);
         await _context.SaveChangesAsync();
     }
