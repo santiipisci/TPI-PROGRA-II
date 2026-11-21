@@ -111,5 +111,6 @@ public class ClienteRepository : IClienteRepository
         c.Telefono,
         c.Direccion,
         c.Email,
-        c.IdTipoClienteNavigation?.Descripcion ?? string.Empty);
+        c.IdTipoClienteNavigation?.Descripcion ?? string.Empty,
+        c.Activo);
 }
