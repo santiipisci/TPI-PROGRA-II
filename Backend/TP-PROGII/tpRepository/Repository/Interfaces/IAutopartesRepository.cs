@@ -10,7 +10,7 @@ namespace tpRepository.Repository.Interfaces
 {
     public interface IAutopartesRepository
     {
-        Task<List<AutoparteDto>> GetAutopartesAsync();
+        Task<List<AutoparteDto>> GetAutopartesAsync(bool incluirInactivos = false);
         Task<bool> ExisteCodigoAsync(string codigoParte);
         Task<bool> ExisteAutoparteAsync(int idProducto);
         Task<int> CrearAutoparteAsync(AutoparteCrearDto dto);

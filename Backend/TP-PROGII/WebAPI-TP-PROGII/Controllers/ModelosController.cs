@@ -19,8 +19,11 @@ public class ModelosController : ControllerBase
     }
 
     [HttpGet("api/modelos")]
-    public async Task<ActionResult<List<ModeloDto>>> GetModelos() =>
-        Ok(await _service.GetModelosAsync());
+    public async Task<ActionResult<List<ModeloDto>>> GetModelos([FromQuery] bool incluirInactivos = false)
+    {
+        var esAdmin = User?.Identities?.Any(i => i.IsAuthenticated && i.AuthenticationType == AuthSchemes.Admin) == true;
+        return Ok(await _service.GetModelosAsync(incluirInactivos && esAdmin));
+    }
 
     [HttpPost("api/modelos"), Authorize(AuthenticationSchemes = AuthSchemes.Admin)]
     public async Task<IActionResult> Create(ModeloCrearDto dto)

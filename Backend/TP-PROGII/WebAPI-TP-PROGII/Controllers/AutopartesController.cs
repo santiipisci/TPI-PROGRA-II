@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using tpRepository.Dtos;
 using tpRepository.Services.Interfaces;
+using WebAPI_TP_PROGII.Security;
 
 namespace WebAPI_TP_PROGII.Controllers;
 
@@ -14,8 +15,11 @@ public class AutopartesController : ControllerBase
     public AutopartesController(IAutopartesService service) => _service = service;
 
     [HttpGet("api/autopartes")]
-    public async Task<ActionResult<List<AutoparteDto>>> GetAutopartes() =>
-        Ok(await _service.GetAutopartesAsync());
+    public async Task<ActionResult<List<AutoparteDto>>> GetAutopartes([FromQuery] bool incluirInactivos = false)
+    {
+        var esAdmin = User?.Identities?.Any(i => i.IsAuthenticated && i.AuthenticationType == AuthSchemes.Admin) == true;
+        return Ok(await _service.GetAutopartesAsync(incluirInactivos && esAdmin));
+    }
 
     [HttpPost("api/autopartes")]
     public async Task<IActionResult> Create([FromBody] AutoparteCrearDto dto)

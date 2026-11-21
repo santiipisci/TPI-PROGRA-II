@@ -46,8 +46,8 @@ const Api = (() => {
 
   return {
     /* --- Públicos --- */
-    autopartes: () => get("/autopartes"),
-    modelos: () => get("/modelos"),
+    autopartes: (incluirInactivos = false) => get("/autopartes", { query: incluirInactivos ? { incluirInactivos: true } : undefined }),
+    modelos: (incluirInactivos = false) => get("/modelos", { query: incluirInactivos ? { incluirInactivos: true } : undefined }),
     categorias: () => get("/categorias"),
     tiposCliente: () => get("/tipos-cliente"),
 
@@ -67,7 +67,7 @@ const Api = (() => {
     estadosOrden: () => get("/estados-orden"),
     ordenes: (q) => get("/admin/ordenes", { query: q }),
     clientes: () => get("/admin/clientes"),
-    orden: (id) => get(`/ordenes/${id}`),
+    orden: (id, incluirInactivos = false) => get(`/ordenes/${id}`, { query: incluirInactivos ? { incluirInactivos: true } : undefined }),
     crearOrden: (dto) => post("/ordenes", dto),
     editarOrden: (id, dto) => put(`/ordenes/${id}`, dto),
     eliminarOrden: (id) => del(`/ordenes/${id}`),

@@ -12,7 +12,7 @@ public class AutopartesService : IAutopartesService
 
     public AutopartesService(IAutopartesRepository repo) => _repo = repo;
 
-    public Task<List<AutoparteDto>> GetAutopartesAsync() => _repo.GetAutopartesAsync();
+    public Task<List<AutoparteDto>> GetAutopartesAsync(bool incluirInactivos = false) => _repo.GetAutopartesAsync(incluirInactivos);
 
     public async Task<int> CrearAutoparteAsync(AutoparteCrearDto dto)
     {

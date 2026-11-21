@@ -10,8 +10,8 @@ namespace tpRepository.Repository.Interfaces
     public interface IOrdenesRepository
     {
         Task<ResumenDto> GetResumenAsync();
-        Task<OrdenPaginadaDto> GetOrdenesAsync(int? idEstadoOrden, string? q, int pagina, int tamano);
-        Task<OrdenDetalleDto?> GetOrdenAsync(int idOrden);
+        Task<OrdenPaginadaDto> GetOrdenesAsync(int? idEstadoOrden, string? q, int pagina, int tamano, bool incluirInactivos = false);
+        Task<OrdenDetalleDto?> GetOrdenAsync(int idOrden, bool incluirInactivos = false);
         Task<int> CrearOrdenAsync(OrdenGuardarDto dto);
         Task<bool> EditarOrdenAsync(int idOrden, OrdenGuardarDto dto);
         Task<bool> EliminarOrdenAsync(int idOrden);

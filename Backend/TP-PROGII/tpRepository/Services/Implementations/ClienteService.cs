@@ -49,7 +49,7 @@ public class ClienteService : IClienteService
             throw new UnauthorizedException("Email o clave incorrectos.");
 
         var cliente = await _repo.GetClientePorEmailAsync(dto.Email);
-        if (cliente == null || !PasswordHasher.Verify(dto.Clave, cliente.ClaveHash))
+        if (cliente == null || string.IsNullOrWhiteSpace(cliente.ClaveHash) || !PasswordHasher.Verify(dto.Clave, cliente.ClaveHash))
             throw new UnauthorizedException("Email o clave incorrectos.");
 
         return await _repo.GetClienteAsync(cliente.IdCliente)

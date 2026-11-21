@@ -20,8 +20,6 @@ public partial class AutopartesDbContext
     {
         modelBuilder.Entity<Cliente>(entity =>
         {
-            entity.HasIndex(e => e.Email, "UQ_Cliente_Email").IsUnique();
-
             entity.Property(e => e.Email)
                 .IsRequired()
                 .HasMaxLength(100)
@@ -37,6 +35,10 @@ public partial class AutopartesDbContext
                 .HasDefaultValueSql("(sysdatetime())")
                 .HasColumnType("datetime2(0)")
                 .HasColumnName("fechaAlta");
+
+            entity.Property(e => e.Activo)
+                .HasDefaultValue(true)
+                .HasColumnName("activo");
         });
 
         modelBuilder.Entity<Modelo>(entity =>
@@ -48,6 +50,10 @@ public partial class AutopartesDbContext
             entity.Property(e => e.AnioHasta)
                 .HasColumnType("smallint")
                 .HasColumnName("anioHasta");
+
+            entity.Property(e => e.Activo)
+                .HasDefaultValue(true)
+                .HasColumnName("activo");
         });
 
         modelBuilder.Entity<UsuarioAdmin>(entity =>
@@ -135,6 +141,13 @@ public partial class AutopartesDbContext
                 .HasForeignKey(d => d.IdProducto)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Imagen_Producto");
+        });
+
+        modelBuilder.Entity<OrdenPedido>(entity =>
+        {
+            entity.Property(e => e.Activo)
+                .HasDefaultValue(true)
+                .HasColumnName("activo");
         });
     }
 }

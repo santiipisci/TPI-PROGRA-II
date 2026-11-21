@@ -10,7 +10,7 @@ namespace tpRepository.Repository.Interfaces
 {
     public interface IModelosRepository
     {
-        Task<List<ModeloDto>> GetModelosAsync();
+        Task<List<ModeloDto>> GetModelosAsync(bool incluirInactivos = false);
         Task<bool> ExisteModeloAsync(string marca, string nombre);
         Task<int> CrearModeloAsync(ModeloCrearDto dto);
         Task EditarModeloAsync(int id, ModeloEditarDto dto);

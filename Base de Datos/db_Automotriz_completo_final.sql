@@ -41,18 +41,21 @@ CREATE TABLE MARCA (
 );
 
 -- [CAMBIO] anioDesde / anioHasta: rango de años del modelo (opcionales)
+-- activo: baja lógica (bool/BIT) según convenciones de negocio
 CREATE TABLE MODELO (
     idModelo   INT IDENTITY(1,1) PRIMARY KEY,
     idMarca    INT NOT NULL REFERENCES MARCA(idMarca),
     nombre     VARCHAR(50) NOT NULL,
     anioDesde  SMALLINT NULL CHECK (anioDesde >= 1900),
     anioHasta  SMALLINT NULL,
-    CONSTRAINT UQ_Modelo UNIQUE (idMarca, nombre),
+    activo     BIT NOT NULL DEFAULT 1,
     CONSTRAINT CK_ModeloAnios CHECK (
         (anioDesde IS NULL AND anioHasta IS NULL)
         OR (anioDesde IS NOT NULL AND anioHasta IS NOT NULL AND anioHasta >= anioDesde)
     )
 );
+-- Unicidad solo entre modelos activos (permite historial de bajas lógicas)
+CREATE UNIQUE INDEX UQ_Modelo_Activo ON MODELO(idMarca, nombre) WHERE activo = 1;
 
 CREATE TABLE TIPO_CARROCERIA (
     idTipoCarroceria INT IDENTITY(1,1) PRIMARY KEY,
@@ -87,19 +90,24 @@ CREATE TABLE ESTADO_AUTOPLAN (
 /* ---------------------------------------------------------------------
    2) CLIENTES Y USUARIOS
    --------------------------------------------------------------------- */
--- [CAMBIO] email NOT NULL UNIQUE (es el usuario de login) y claveHash (hash generado por el backend, nunca texto plano).
+-- [CAMBIO] email NOT NULL (usuario de login) y claveHash (hash generado por el backend, nunca texto plano).
 -- claveHash NULL = cliente cargado por el negocio que todavía no creó su cuenta en el sitio.
+-- activo: baja lógica (bool/BIT) según convenciones de negocio
 CREATE TABLE CLIENTE (
     idCliente         INT IDENTITY(1,1) PRIMARY KEY,
     idTipoCliente     INT          NOT NULL REFERENCES TIPO_CLIENTE(idTipoCliente),
     nombreRazonSocial VARCHAR(100) NOT NULL,
-    documentoCuit     VARCHAR(13)  NOT NULL UNIQUE,
+    documentoCuit     VARCHAR(13)  NOT NULL,
     direccion         VARCHAR(150) NULL,
     telefono          VARCHAR(20)  NULL,
-    email             VARCHAR(100) NOT NULL UNIQUE,
+    email             VARCHAR(100) NOT NULL,
     claveHash         VARCHAR(255) NULL,
-    fechaAlta         DATETIME2(0) NOT NULL DEFAULT SYSDATETIME()
+    fechaAlta         DATETIME2(0) NOT NULL DEFAULT SYSDATETIME(),
+    activo            BIT          NOT NULL DEFAULT 1
 );
+-- Unicidad solo entre clientes activos (permite conservar historial de bajas lógicas)
+CREATE UNIQUE INDEX UX_Cliente_Documento_Activo ON CLIENTE(documentoCuit) WHERE activo = 1;
+CREATE UNIQUE INDEX UX_Cliente_Email_Activo ON CLIENTE(email) WHERE activo = 1;
 
 -- [NUEVO] Administradores del panel (login en /auth/login)
 CREATE TABLE USUARIO_ADMIN (
@@ -186,12 +194,14 @@ CREATE UNIQUE INDEX UX_Precio_Vigente ON PRECIO_PRODUCTO(idProducto) WHERE fecha
 /* ---------------------------------------------------------------------
    4) ÓRDENES DE PEDIDO
    --------------------------------------------------------------------- */
+-- activo: baja lógica (bool/BIT) para preservar historial transaccional
 CREATE TABLE ORDEN_PEDIDO (
     idOrdenPedido INT IDENTITY(1,1) PRIMARY KEY,
     idCliente     INT  NOT NULL REFERENCES CLIENTE(idCliente),
     idEstadoOrden INT  NOT NULL REFERENCES ESTADO_ORDEN(idEstadoOrden),
     fechaPedido   DATE NOT NULL,
     fechaEntrega  DATE NULL,
+    activo        BIT  NOT NULL DEFAULT 1,
     CONSTRAINT CK_OrdenFechas CHECK (fechaEntrega IS NULL OR fechaEntrega >= fechaPedido)
 );
 
@@ -290,9 +300,12 @@ GO
    SQL Server no indexa automáticamente las columnas FK; se agregan las que usan las consultas del sitio.
    --------------------------------------------------------------------- */
 CREATE INDEX IX_Producto_Activo        ON PRODUCTO(activo) INCLUDE (idTipoProducto, descripcion);
+CREATE INDEX IX_Modelo_Activo          ON MODELO(activo) INCLUDE (idMarca, nombre);
+CREATE INDEX IX_Cliente_Activo         ON CLIENTE(activo) INCLUDE (idTipoCliente, nombreRazonSocial, email);
 CREATE INDEX IX_Autoparte_Categoria    ON AUTOPARTE(idCategoria);
 CREATE INDEX IX_AutoparteModelo_Modelo ON AUTOPARTE_MODELO(idModelo);
 CREATE INDEX IX_Orden_Cliente          ON ORDEN_PEDIDO(idCliente);
+CREATE INDEX IX_Orden_Activo           ON ORDEN_PEDIDO(activo) INCLUDE (idCliente, idEstadoOrden, fechaPedido);
 CREATE INDEX IX_Orden_Estado_Fecha     ON ORDEN_PEDIDO(idEstadoOrden, fechaPedido DESC);
 CREATE INDEX IX_Factura_Fecha          ON FACTURA(fecha) INCLUDE (total);
 CREATE INDEX IX_Factura_Cliente        ON FACTURA(idCliente);
@@ -619,4 +632,183 @@ FROM dbo.ORDEN_PEDIDO o
 CROSS JOIN (VALUES (0), (1), (2)) n(k)
 INNER JOIN @Partes p ON p.fila = ((o.idOrdenPedido * 3 + n.k) % @TotalPartes) + 1
 WHERE NOT EXISTS (SELECT 1 FROM dbo.DETALLE_ORDEN_PEDIDO d WHERE d.idOrdenPedido = o.idOrdenPedido);
+GO
+
+USE db_Automotriz_final;
+GO
+
+-- 1. Insertar los 4 tipos de cliente del desplegable
+IF NOT EXISTS (SELECT 1 FROM dbo.TIPO_CLIENTE WHERE descripcion = 'Consumidor final')
+    INSERT INTO dbo.TIPO_CLIENTE (descripcion) VALUES ('Consumidor final');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.TIPO_CLIENTE WHERE descripcion = 'Empresa')
+    INSERT INTO dbo.TIPO_CLIENTE (descripcion) VALUES ('Empresa');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.TIPO_CLIENTE WHERE descripcion = 'Concesionario')
+    INSERT INTO dbo.TIPO_CLIENTE (descripcion) VALUES ('Concesionario');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.TIPO_CLIENTE WHERE descripcion = 'Vendedora de autopartes')
+    INSERT INTO dbo.TIPO_CLIENTE (descripcion) VALUES ('Vendedora de autopartes');
+GO
+
+-- 2. Obtener los IDs reales de cada tipo de cliente
+DECLARE @TipoConsumidor INT = (SELECT TOP 1 idTipoCliente FROM dbo.TIPO_CLIENTE WHERE descripcion = 'Consumidor final');
+DECLARE @TipoEmpresa    INT = (SELECT TOP 1 idTipoCliente FROM dbo.TIPO_CLIENTE WHERE descripcion = 'Empresa');
+DECLARE @TipoConcesio   INT = (SELECT TOP 1 idTipoCliente FROM dbo.TIPO_CLIENTE WHERE descripcion = 'Concesionario');
+DECLARE @TipoAutopartes INT = (SELECT TOP 1 idTipoCliente FROM dbo.TIPO_CLIENTE WHERE descripcion = 'Vendedora de autopartes');
+
+INSERT INTO dbo.CLIENTE (
+    idTipoCliente,
+    nombreRazonSocial,
+    documentoCuit,
+    direccion,
+    telefono,
+    email,
+    claveHash,
+    fechaAlta
+) VALUES
+
+(@TipoConsumidor, 'Carlos Alberto Méndez',      '20-28456123-4', 'Av. Colón 1450, Córdoba',            '3515123401', 'cmendez.racing@gmail.com',      NULL, '2026-05-10T09:30:00'),
+(@TipoConsumidor, 'Lucía Fernanda Giménez',     '27-33912845-1', 'Bv. San Juan 820, Córdoba',          '3515123402', 'lucia.gimenez@hotmail.com',     NULL, '2026-05-18T11:15:00'),
+(@TipoConsumidor, 'Martín Ezequiel Domínguez',  '20-31789456-8', 'Ruta 19 Km 24, Monte Cristo',        '3515123403', 'mdominguez.motor@gmail.com',    NULL, '2026-06-01T10:00:00'),
+
+(@TipoEmpresa, 'Escudería Sur Motorsport S.A.',            '30-71623489-8', 'Parque Industrial Ferreyra, Lote 12','3514881101', 'logistica@escuderiasur.com.ar',  NULL, '2026-06-08T13:00:00'),
+(@TipoEmpresa, 'Rectificadora y Motores Mediterránea S.A.','30-70541236-9', 'Calle Juan B. Justo 5210, Córdoba',  '3514881102', 'taller@rectificadoramed.com.ar', NULL, '2026-07-10T11:20:00'),
+(@TipoEmpresa, 'Talleres Mecánicos del Centro S.R.L.',     '30-71458923-5', 'Av. Sabattini 3400, Córdoba',        '3514881103', 'compras@talleresdelcentro.com.ar',NULL, '2026-05-15T09:00:00'),
+
+(@TipoConcesio, 'Concesionaria Automotores del Valle S.A.', '30-71890345-2', 'Av. Caraffa 2100, Córdoba',          '3514881104', 'flotas@automotoresdelvalle.com.ar',NULL, '2026-08-03T09:50:00'),
+(@TipoConcesio, 'MotorHaus Concesionario Oficial S.R.L.',    '30-71554890-6', 'Av. Rafael Núñez 4120, Córdoba',     '3514881105', 'ventas@motorhaus.com.ar',         NULL, '2026-06-22T15:40:00'),
+(@TipoConcesio, 'Alta Gama Automotores del Centro S.A.',     '30-71902341-7', 'Av. Fuerza Aérea 2910, Córdoba',     '3514881106', 'clientes@altagamaauto.com.ar',    NULL, '2026-07-19T14:10:00'),
+
+(@TipoAutopartes, 'Repuestos y Competición Córdoba S.A.',    '30-70984512-1', 'Av. Circunvalación Norte 1850, Cba', '3514881107', 'ventas@repuestoscompeticion.com.ar',NULL, '2026-05-25T10:30:00'),
+(@TipoAutopartes, 'Autopartes y Frenos Ruta 19 S.R.L.',      '30-71209874-3', 'Av. San Martín 980, Monte Cristo',   '3514881108', 'administracion@autopartesr19.com.ar',NULL,'2026-06-12T16:20:00'),
+(@TipoAutopartes, 'Todo Suspensión y Escape Racing S.A.',    '30-71776543-0', 'Calle Belgrano 415, Río Primero',    '3514881109', 'pedidos@todosuspension.com.ar',   NULL, '2026-07-02T08:45:00');
+GO
+
+USE db_Automotriz_final;
+GO
+
+-- 1. Insertar los 5 estados de orden (sin idEstadoOrden por ser IDENTITY)
+IF NOT EXISTS (SELECT 1 FROM dbo.ESTADO_ORDEN WHERE descripcion = 'Pendiente')
+    INSERT INTO dbo.ESTADO_ORDEN (descripcion) VALUES ('Pendiente');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.ESTADO_ORDEN WHERE descripcion = 'En producción')
+    INSERT INTO dbo.ESTADO_ORDEN (descripcion) VALUES ('En producción');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.ESTADO_ORDEN WHERE descripcion = 'Lista')
+    INSERT INTO dbo.ESTADO_ORDEN (descripcion) VALUES ('Lista');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.ESTADO_ORDEN WHERE descripcion = 'Entregada')
+    INSERT INTO dbo.ESTADO_ORDEN (descripcion) VALUES ('Entregada');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.ESTADO_ORDEN WHERE descripcion = 'Cancelada')
+    INSERT INTO dbo.ESTADO_ORDEN (descripcion) VALUES ('Cancelada');
+GO
+
+-- 2. Obtener IDs reales de cada estado
+DECLARE @EstPendiente  INT = (SELECT TOP 1 idEstadoOrden FROM dbo.ESTADO_ORDEN WHERE descripcion = 'Pendiente');
+DECLARE @EstProduccion INT = (SELECT TOP 1 idEstadoOrden FROM dbo.ESTADO_ORDEN WHERE descripcion = 'En producción');
+DECLARE @EstLista      INT = (SELECT TOP 1 idEstadoOrden FROM dbo.ESTADO_ORDEN WHERE descripcion = 'Lista');
+DECLARE @EstEntregada  INT = (SELECT TOP 1 idEstadoOrden FROM dbo.ESTADO_ORDEN WHERE descripcion = 'Entregada');
+DECLARE @EstCancelada  INT = (SELECT TOP 1 idEstadoOrden FROM dbo.ESTADO_ORDEN WHERE descripcion = 'Cancelada');
+
+DECLARE @OrdenesSeed TABLE (
+    cuitCliente  VARCHAR(13),
+    codEstado    VARCHAR(20),
+    fechaPedido  DATE,
+    fechaEntrega DATE NULL
+);
+
+INSERT INTO @OrdenesSeed (cuitCliente, codEstado, fechaPedido, fechaEntrega) VALUES
+-- JUNIO 2026 (4 órdenes)
+('20-28456123-4', 'ENTREGADA',  '2026-06-05', '2026-06-10'), -- Consumidor final
+('30-70984512-1', 'ENTREGADA',  '2026-06-14', '2026-06-19'), -- Vendedora de autopartes
+('27-33912845-1', 'CANCELADA',  '2026-06-21', NULL),       -- Consumidor final
+('30-71890345-2', 'ENTREGADA',  '2026-06-27', '2026-07-02'), -- Concesionario
+
+-- JULIO 2026 (6 órdenes)
+('30-71623489-8', 'ENTREGADA',  '2026-07-03', '2026-07-08'), -- Empresa
+('20-31789456-8', 'ENTREGADA',  '2026-07-09', '2026-07-13'), -- Consumidor final
+('30-71209874-3', 'CANCELADA',  '2026-07-15', NULL),       -- Vendedora de autopartes
+('30-71554890-6', 'ENTREGADA',  '2026-07-18', '2026-07-24'), -- Concesionario
+('30-70541236-9', 'ENTREGADA',  '2026-07-22', '2026-07-27'), -- Empresa
+('30-71776543-0', 'ENTREGADA',  '2026-07-29', '2026-08-03'), -- Vendedora de autopartes
+
+-- AGOSTO 2026 (9 órdenes)
+('20-28456123-4', 'ENTREGADA',  '2026-08-02', '2026-08-06'), -- Consumidor final
+('30-71458923-5', 'ENTREGADA',  '2026-08-06', '2026-08-12'), -- Empresa
+('30-70984512-1', 'ENTREGADA',  '2026-08-10', '2026-08-15'), -- Vendedora de autopartes
+('30-71902341-7', 'CANCELADA',  '2026-08-13', NULL),       -- Concesionario
+('30-71623489-8', 'ENTREGADA',  '2026-08-17', '2026-08-21'), -- Empresa
+('27-33912845-1', 'ENTREGADA',  '2026-08-20', '2026-08-26'), -- Consumidor final
+('30-71890345-2', 'ENTREGADA',  '2026-08-24', '2026-08-29'), -- Concesionario
+('20-31789456-8', 'CANCELADA',  '2026-08-27', NULL),       -- Consumidor final
+('30-71209874-3', 'ENTREGADA',  '2026-08-30', '2026-09-04'), -- Vendedora de autopartes
+
+-- SEPTIEMBRE 2026 (12 órdenes)
+('30-71554890-6', 'ENTREGADA',  '2026-09-02', '2026-09-07'), -- Concesionario
+('30-70541236-9', 'ENTREGADA',  '2026-09-05', '2026-09-10'), -- Empresa
+('30-71776543-0', 'ENTREGADA',  '2026-09-08', '2026-09-14'), -- Vendedora de autopartes
+('20-28456123-4', 'CANCELADA',  '2026-09-11', NULL),       -- Consumidor final
+('30-71458923-5', 'ENTREGADA',  '2026-09-14', '2026-09-18'), -- Empresa
+('30-70984512-1', 'ENTREGADA',  '2026-09-16', '2026-09-22'), -- Vendedora de autopartes
+('30-71902341-7', 'ENTREGADA',  '2026-09-19', '2026-09-24'), -- Concesionario
+('27-33912845-1', 'ENTREGADA',  '2026-09-21', '2026-09-26'), -- Consumidor final
+('30-71209874-3', 'CANCELADA',  '2026-09-24', NULL),       -- Vendedora de autopartes
+('30-71623489-8', 'ENTREGADA',  '2026-09-26', '2026-10-01'), -- Empresa
+('20-31789456-8', 'ENTREGADA',  '2026-09-28', '2026-10-03'), -- Consumidor final
+('30-71890345-2', 'ENTREGADA',  '2026-09-30', '2026-10-05'), -- Concesionario
+
+-- OCTUBRE 2026 (15 órdenes)
+('30-70984512-1', 'ENTREGADA',  '2026-10-02', '2026-10-07'), -- Vendedora de autopartes
+('30-71554890-6', 'ENTREGADA',  '2026-10-04', '2026-10-09'), -- Concesionario
+('30-70541236-9', 'ENTREGADA',  '2026-10-06', '2026-10-12'), -- Empresa
+('20-28456123-4', 'CANCELADA',  '2026-10-08', NULL),       -- Consumidor final
+('30-71776543-0', 'ENTREGADA',  '2026-10-10', '2026-10-15'), -- Vendedora de autopartes
+('30-71458923-5', 'ENTREGADA',  '2026-10-12', '2026-10-17'), -- Empresa
+('30-71902341-7', 'LISTA',      '2026-10-15', NULL),       -- Concesionario
+('27-33912845-1', 'ENTREGADA',  '2026-10-17', '2026-10-22'), -- Consumidor final
+('30-71209874-3', 'ENTREGADA',  '2026-10-19', '2026-10-24'), -- Vendedora de autopartes
+('20-31789456-8', 'CANCELADA',  '2026-10-21', NULL),       -- Consumidor final
+('30-71623489-8', 'LISTA',      '2026-10-23', NULL),       -- Empresa
+('30-71890345-2', 'ENTREGADA',  '2026-10-25', '2026-10-30'), -- Concesionario
+('30-70984512-1', 'PRODUCCION', '2026-10-27', NULL),       -- Vendedora de autopartes
+('30-70541236-9', 'ENTREGADA',  '2026-10-29', '2026-11-03'), -- Empresa
+('30-71554890-6', 'LISTA',      '2026-10-31', NULL),       -- Concesionario
+
+-- NOVIEMBRE 2026 (18 órdenes)
+('30-71776543-0', 'ENTREGADA',  '2026-11-01', '2026-11-05'), -- Vendedora de autopartes
+('30-71458923-5', 'ENTREGADA',  '2026-11-02', '2026-11-07'), -- Empresa
+('30-71902341-7', 'ENTREGADA',  '2026-11-04', '2026-11-09'), -- Concesionario
+('27-33912845-1', 'CANCELADA',  '2026-11-05', NULL),       -- Consumidor final
+('30-71209874-3', 'ENTREGADA',  '2026-11-06', '2026-11-11'), -- Vendedora de autopartes
+('30-71623489-8', 'LISTA',      '2026-11-08', NULL),       -- Empresa
+('30-71890345-2', 'ENTREGADA',  '2026-11-09', '2026-11-14'), -- Concesionario
+('30-70984512-1', 'PRODUCCION', '2026-11-10', NULL),       -- Vendedora de autopartes
+('30-71554890-6', 'LISTA',      '2026-11-11', NULL),       -- Concesionario
+('20-28456123-4', 'ENTREGADA',  '2026-11-12', '2026-11-17'), -- Consumidor final
+('30-70541236-9', 'PRODUCCION', '2026-11-13', NULL),       -- Empresa
+('20-31789456-8', 'PENDIENTE',  '2026-11-14', NULL),       -- Consumidor final
+('30-71776543-0', 'PRODUCCION', '2026-11-15', NULL),       -- Vendedora de autopartes
+('30-71458923-5', 'LISTA',      '2026-11-16', NULL),       -- Empresa
+('30-71902341-7', 'PENDIENTE',  '2026-11-17', NULL),       -- Concesionario
+('30-71209874-3', 'PRODUCCION', '2026-11-18', NULL),       -- Vendedora de autopartes
+('27-33912845-1', 'PENDIENTE',  '2026-11-19', NULL),       -- Consumidor final
+('30-71890345-2', 'PENDIENTE',  '2026-11-20', NULL);       -- Concesionario
+
+INSERT INTO dbo.ORDEN_PEDIDO (idCliente, idEstadoOrden, fechaPedido, fechaEntrega)
+SELECT
+    c.idCliente,
+    CASE s.codEstado
+        WHEN 'PENDIENTE'  THEN @EstPendiente
+        WHEN 'PRODUCCION' THEN @EstProduccion
+        WHEN 'LISTA'      THEN @EstLista
+        WHEN 'ENTREGADA'  THEN @EstEntregada
+        WHEN 'CANCELADA'  THEN @EstCancelada
+    END,
+    s.fechaPedido,
+    s.fechaEntrega
+FROM @OrdenesSeed s
+INNER JOIN dbo.CLIENTE c
+    ON c.documentoCuit = s.cuitCliente;
 GO

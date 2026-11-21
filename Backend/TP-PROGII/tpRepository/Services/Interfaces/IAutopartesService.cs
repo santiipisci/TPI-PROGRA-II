@@ -4,7 +4,7 @@ namespace tpRepository.Services.Interfaces;
 
 public interface IAutopartesService
 {
-    Task<List<AutoparteDto>> GetAutopartesAsync();
+    Task<List<AutoparteDto>> GetAutopartesAsync(bool incluirInactivos = false);
     Task<int> CrearAutoparteAsync(AutoparteCrearDto dto);
     Task EditarAutoparteAsync(int idProducto, AutoparteEditarDto dto);
     Task ActualizarStockAsync(int idProducto, int stockActual);

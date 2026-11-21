@@ -17,6 +17,8 @@ public partial class OrdenPedido
 
     public DateOnly? FechaEntrega { get; set; }
 
+    public bool Activo { get; set; }
+
     public virtual ICollection<DetalleOrdenPedido> DetalleOrdenPedidos { get; set; } = new List<DetalleOrdenPedido>();
 
     public virtual ICollection<SeguimientoOrden> Seguimientos { get; set; } = new List<SeguimientoOrden>();

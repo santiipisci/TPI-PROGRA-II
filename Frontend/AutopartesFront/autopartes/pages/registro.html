@@ -26,7 +26,7 @@
             <div class="row g-3">
               <div class="col-md-6"><label class="form-label" for="rTipo">Tipo de cliente</label><select id="rTipo" class="form-select" required></select></div>
               <div class="col-md-6"><label class="form-label" for="rNombre">Nombre / Razón social</label><input id="rNombre" class="form-control" required maxlength="100" autocomplete="name"></div>
-              <div class="col-md-6"><label class="form-label" for="rDoc">Documento / CUIL</label><input id="rDoc" class="form-control" required maxlength="13" inputmode="numeric" placeholder="Solo números o con guiones"></div>
+              <div class="col-md-6"><label class="form-label" for="rDoc">Documento / CUIL</label><input id="rDoc" class="form-control" required maxlength="13" inputmode="numeric" pattern="\d{7,13}" placeholder="Solo números"></div>
               <div class="col-md-6"><label class="form-label" for="rTel">Teléfono</label><input id="rTel" type="tel" inputmode="numeric" pattern="[0-9]{7,15}" class="form-control" required maxlength="15" autocomplete="tel"></div>
               <div class="col-12"><label class="form-label" for="rDir">Dirección</label><input id="rDir" class="form-control" required maxlength="150" autocomplete="street-address"></div>
               <div class="col-12"><label class="form-label" for="rEmail">Email</label><input id="rEmail" type="email" class="form-control" required maxlength="100" autocomplete="email"></div>

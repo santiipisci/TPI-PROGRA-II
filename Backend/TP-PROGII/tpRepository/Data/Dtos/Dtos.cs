@@ -17,7 +17,8 @@ public record AutoparteDto(
     int StockActual,
     int StockMinimo,
     string? ImagenUrl,
-    List<int> Modelos);
+    List<int> Modelos,
+    bool Activo);
 
 public record ModeloDto(
     int IdModelo,
@@ -25,7 +26,8 @@ public record ModeloDto(
     string Marca,
     string Nombre,
     short? AnioDesde,
-    short? AnioHasta);
+    short? AnioHasta,
+    bool Activo);
 
 public record CategoriaDto(int IdCategoria, string Nombre);
 
@@ -41,7 +43,8 @@ public record ClienteDto(
     string? Telefono,
     string? Direccion,
     string Email,
-    string TipoCliente);
+    string TipoCliente,
+    bool Activo);
 
 public record ClienteRegistroDto(
     int IdTipoCliente,
@@ -68,13 +71,13 @@ public record AutoparteCrearDto(
     int StockMinimo,
     string? ImagenUrl);
 
-public record AutoparteEditarDto(string Descripcion, int IdCategoria, decimal Precio, string? ImagenUrl);
+public record AutoparteEditarDto(string Descripcion, int IdCategoria, decimal Precio, string? ImagenUrl, bool Activo = true);
 
 public record StockDto(int StockActual);
 
 public record ModeloCrearDto(string Marca, string Nombre, short? AnioDesde, short? AnioHasta);
 
-public record ModeloEditarDto(string Marca, string Nombre, short? AnioDesde, short? AnioHasta);
+public record ModeloEditarDto(string Marca, string Nombre, short? AnioDesde, short? AnioHasta, bool Activo = true);
 
 public record VentaMesDto(int Anio, int Mes, decimal Total);
 
@@ -95,7 +98,8 @@ public record OrdenListadoDto(
     string TipoCliente,
     string Estado,
     int IdEstadoOrden,
-    decimal Total);
+    decimal Total,
+    bool Activo);
 
 public record OrdenPaginadaDto(List<OrdenListadoDto> Items, int TotalRegistros, decimal SumaTotal);
 
@@ -113,7 +117,8 @@ public record OrdenDetalleDto(
     DateOnly? FechaEntrega,
     decimal Total,
     List<OrdenItemDto> Items,
-    List<SeguimientoDto> Seguimiento);
+    List<SeguimientoDto> Seguimiento,
+    bool Activo);
 
 public record OrdenItemGuardarDto(int IdProducto, int Cantidad);
 
@@ -122,7 +127,8 @@ public record OrdenGuardarDto(
     int IdEstadoOrden,
     DateOnly FechaPedido,
     DateOnly? FechaEntrega,
-    List<OrdenItemGuardarDto>? Items);
+    List<OrdenItemGuardarDto>? Items,
+    bool Activo = true);
 
 public record SeguimientoCrearDto(DateOnly Fecha, int IdEstadoOrden, string? Observacion);
 

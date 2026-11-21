@@ -23,7 +23,7 @@ namespace tpRepository.Repository.Implementations
 
         public async Task<SeguimientoDto> AgregarSeguimientoAsync(int idOrden, SeguimientoCrearDto dto)
         {
-            var orden = await _context.OrdenPedidos.FirstOrDefaultAsync(o => o.IdOrdenPedido == idOrden)
+            var orden = await _context.OrdenPedidos.FirstOrDefaultAsync(o => o.IdOrdenPedido == idOrden && o.Activo)
                 ?? throw new NotFoundException("La orden no existe.");
 
             var estado = await _context.EstadoOrdens.FirstOrDefaultAsync(e => e.IdEstadoOrden == dto.IdEstadoOrden)
@@ -71,6 +71,7 @@ namespace tpRepository.Repository.Implementations
                 IdEstadoOrden = dto.IdEstadoOrden,
                 FechaPedido = dto.FechaPedido,
                 FechaEntrega = dto.FechaEntrega,
+                Activo = dto.Activo,
             };
 
             _context.OrdenPedidos.Add(orden);
@@ -123,6 +124,7 @@ namespace tpRepository.Repository.Implementations
             orden.IdEstadoOrden = dto.IdEstadoOrden;
             orden.FechaPedido = dto.FechaPedido;
             orden.FechaEntrega = dto.FechaEntrega;
+            orden.Activo = dto.Activo;
 
             _context.DetalleOrdenPedidos.RemoveRange(orden.DetalleOrdenPedidos);
             orden.DetalleOrdenPedidos.Clear();
@@ -157,46 +159,44 @@ namespace tpRepository.Repository.Implementations
         public async Task<bool> EliminarOrdenAsync(int idOrden)
         {
             var orden = await _context.OrdenPedidos
-                .Include(o => o.DetalleOrdenPedidos)
-                .Include(o => o.Seguimientos)
-                .FirstOrDefaultAsync(o => o.IdOrdenPedido == idOrden);
+                .FirstOrDefaultAsync(o => o.IdOrdenPedido == idOrden && o.Activo);
 
             if (orden == null) return false;
 
-            if (await _context.Facturas.AnyAsync(f => f.IdOrdenPedido == idOrden))
-                throw new BusinessException("No se puede eliminar una orden que ya tiene factura asociada.");
-
-            await using var tx = await _context.Database.BeginTransactionAsync();
-
-            _context.SeguimientoOrdens.RemoveRange(orden.Seguimientos);
-            _context.DetalleOrdenPedidos.RemoveRange(orden.DetalleOrdenPedidos);
-            _context.OrdenPedidos.Remove(orden);
-
+            // Baja lógica: se conserva la orden, su detalle y seguimiento para historial/auditoría.
+            orden.Activo = false;
             await _context.SaveChangesAsync();
-            await tx.CommitAsync();
 
             return true;
         }
 
         public async Task<bool> EliminarSeguimientoAsync(int idSeguimiento)
         {
-            var seguimiento = await _context.SeguimientoOrdens.FirstOrDefaultAsync(s => s.IdSeguimiento == idSeguimiento);
-            if (seguimiento == null) return false;
+            var seguimiento = await _context.SeguimientoOrdens
+                .Include(s => s.IdOrdenPedidoNavigation)
+                .FirstOrDefaultAsync(s => s.IdSeguimiento == idSeguimiento);
+            if (seguimiento == null || seguimiento.IdOrdenPedidoNavigation == null || !seguimiento.IdOrdenPedidoNavigation.Activo)
+                return false;
 
             _context.SeguimientoOrdens.Remove(seguimiento);
             await _context.SaveChangesAsync();
             return true;
         }
 
-        public async Task<OrdenDetalleDto?> GetOrdenAsync(int idOrden)
+        public async Task<OrdenDetalleDto?> GetOrdenAsync(int idOrden, bool incluirInactivos = false)
         {
-            var o = await _context.OrdenPedidos
+            var query = _context.OrdenPedidos
                 .AsNoTracking()
                 .Include(x => x.IdClienteNavigation)
                 .Include(x => x.IdEstadoOrdenNavigation)
                 .Include(x => x.DetalleOrdenPedidos).ThenInclude(d => d.IdProductoNavigation).ThenInclude(p => p.PrecioProductos)
                 .Include(x => x.Seguimientos).ThenInclude(s => s.IdEstadoOrdenNavigation)
-                .FirstOrDefaultAsync(x => x.IdOrdenPedido == idOrden);
+                .Where(x => x.IdOrdenPedido == idOrden);
+
+            if (!incluirInactivos)
+                query = query.Where(x => x.Activo);
+
+            var o = await query.FirstOrDefaultAsync();
 
             if (o == null) return null;
 
@@ -240,15 +240,18 @@ namespace tpRepository.Repository.Implementations
                 o.FechaEntrega,
                 items.Sum(i => i.Subtotal),
                 items,
-                seguimiento);
+                seguimiento,
+                o.Activo);
         }
 
-        public async Task<OrdenPaginadaDto> GetOrdenesAsync(int? idEstadoOrden, string? q, int pagina, int tamano)
+        public async Task<OrdenPaginadaDto> GetOrdenesAsync(int? idEstadoOrden, string? q, int pagina, int tamano, bool incluirInactivos = false)
         {
             pagina = Math.Max(1, pagina);
             tamano = Math.Clamp(tamano, 1, 100);
 
             var query = _context.OrdenPedidos.AsNoTracking().AsQueryable();
+            if (!incluirInactivos)
+                query = query.Where(o => o.Activo);
 
             if (idEstadoOrden is > 0)
                 query = query.Where(o => o.IdEstadoOrden == idEstadoOrden);
@@ -277,6 +280,7 @@ namespace tpRepository.Repository.Implementations
                     o.FechaPedido,
                     o.FechaEntrega,
                     o.IdEstadoOrden,
+                    o.Activo,
                     Cliente = o.IdClienteNavigation.NombreRazonSocial,
                     TipoCliente = o.IdClienteNavigation.IdTipoClienteNavigation.Descripcion,
                     Estado = o.IdEstadoOrdenNavigation.Descripcion,
@@ -291,7 +295,8 @@ namespace tpRepository.Repository.Implementations
                 o.TipoCliente,
                 o.Estado,
                 o.IdEstadoOrden,
-                totales.GetValueOrDefault(o.IdOrdenPedido))).ToList();
+                totales.GetValueOrDefault(o.IdOrdenPedido),
+                o.Activo)).ToList();
 
             return new OrdenPaginadaDto(items, totalRegistros, sumaTotal);
         }
@@ -305,6 +310,7 @@ namespace tpRepository.Repository.Implementations
 
             var ordenes = await _context.OrdenPedidos
                 .AsNoTracking()
+                .Where(o => o.Activo)
                 .Select(o => new { o.IdOrdenPedido, o.IdEstadoOrden, o.FechaPedido })
                 .ToListAsync();
 
@@ -333,7 +339,7 @@ namespace tpRepository.Repository.Implementations
 
         private async Task ValidarOrdenAsync(OrdenGuardarDto dto)
         {
-            if (!await _context.Clientes.AnyAsync(c => c.IdCliente == dto.IdCliente))
+            if (!await _context.Clientes.AnyAsync(c => c.IdCliente == dto.IdCliente && c.Activo))
                 throw new BusinessException("El cliente indicado no existe.");
 
             if (!await _context.EstadoOrdens.AnyAsync(e => e.IdEstadoOrden == dto.IdEstadoOrden))
@@ -349,7 +355,8 @@ namespace tpRepository.Repository.Implementations
             var ids = items.Select(i => i.IdProducto).Distinct().ToList();
             if (ids.Count == 0) return;
 
-            var existentes = await _context.Autopartes.CountAsync(a => ids.Contains(a.IdProducto));
+            var existentes = await _context.Autopartes.CountAsync(a =>
+                ids.Contains(a.IdProducto) && a.IdProductoNavigation.Activo);
             if (existentes != ids.Count)
                 throw new BusinessException("Alguna de las autopartes del detalle no existe.");
         }

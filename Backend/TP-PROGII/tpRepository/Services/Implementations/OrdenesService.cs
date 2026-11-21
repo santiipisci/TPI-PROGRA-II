@@ -22,11 +22,11 @@ public class OrdenesService : IOrdenesService
        ÓRDENES Y SEGUIMIENTO
        ================================================================ */
 
-    public Task<OrdenPaginadaDto> GetOrdenesAsync(int? idEstadoOrden, string? q, int pagina, int tamano) =>
-        _repo.GetOrdenesAsync(idEstadoOrden, q, pagina, tamano);
+    public Task<OrdenPaginadaDto> GetOrdenesAsync(int? idEstadoOrden, string? q, int pagina, int tamano, bool incluirInactivos = false) =>
+        _repo.GetOrdenesAsync(idEstadoOrden, q, pagina, tamano, incluirInactivos);
 
-    public async Task<OrdenDetalleDto> GetOrdenAsync(int idOrden) =>
-        await _repo.GetOrdenAsync(idOrden)
+    public async Task<OrdenDetalleDto> GetOrdenAsync(int idOrden, bool incluirInactivos = false) =>
+        await _repo.GetOrdenAsync(idOrden, incluirInactivos)
         ?? throw new NotFoundException("La orden no existe.");
 
     public async Task<int> CrearOrdenAsync(OrdenGuardarDto dto)

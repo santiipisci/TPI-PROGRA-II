@@ -16,8 +16,8 @@ public class OrdenesController : ControllerBase
     public OrdenesController(IOrdenesService service) => _service = service;
 
     [HttpGet("api/ordenes/{id:int}")]
-    public async Task<ActionResult<OrdenDetalleDto>> Get(int id) =>
-        Ok(await _service.GetOrdenAsync(id));
+    public async Task<ActionResult<OrdenDetalleDto>> Get(int id, [FromQuery] bool incluirInactivos = false) =>
+        Ok(await _service.GetOrdenAsync(id, incluirInactivos));
 
     [HttpPost("api/ordenes")]
     public async Task<IActionResult> Create([FromBody] OrdenGuardarDto dto)

@@ -4,7 +4,7 @@ namespace tpRepository.Services.Interfaces;
 
 public interface IModelosService
 {
-    Task<List<ModeloDto>> GetModelosAsync();
+    Task<List<ModeloDto>> GetModelosAsync(bool incluirInactivos = false);
     Task<int> CrearModeloAsync(ModeloCrearDto dto);
     Task EditarModeloAsync(int id, ModeloEditarDto dto);
     Task EliminarModeloAsync(int id);

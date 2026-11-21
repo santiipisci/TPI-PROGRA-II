@@ -15,9 +15,9 @@ public class ModelosService : IModelosService
         _repository = repository;
     }
 
-    public async Task<List<ModeloDto>> GetModelosAsync()
+    public async Task<List<ModeloDto>> GetModelosAsync(bool incluirInactivos = false)
     {
-        return await _repository.GetModelosAsync();
+        return await _repository.GetModelosAsync(incluirInactivos);
     }
 
 

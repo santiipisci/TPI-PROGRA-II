@@ -25,6 +25,8 @@ public partial class Cliente
 
     public DateTime FechaAlta { get; set; }
 
+    public bool Activo { get; set; }
+
     public virtual ICollection<Factura> Facturas { get; set; } = new List<Factura>();
 
     public virtual TipoCliente IdTipoClienteNavigation { get; set; }

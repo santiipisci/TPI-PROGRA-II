@@ -43,7 +43,7 @@ function initAdmin() {
 
   /* ---------- Dashboard ---------- */
   function renderKpis() {
-    $("kStock").textContent = parts.reduce((a, p) => a + p.stockActual, 0).toLocaleString("es-AR");
+    $("kStock").textContent = parts.filter((p) => p.activo !== false).reduce((a, p) => a + p.stockActual, 0).toLocaleString("es-AR");
     $("kMes").textContent = resumen ? UI.money(resumen.ventasUltimoMes) : "–";
     $("kAnio").textContent = resumen ? UI.money(resumen.ventasUltimoAnio) : "–";
     $("kOrdenes").textContent = resumen ? resumen.ordenesTotales.toLocaleString("es-AR") : "–";
@@ -96,7 +96,7 @@ function initAdmin() {
   }
 
   function renderLowStock() {
-    const low = parts.filter(UI.isLowStock).sort((a, b) => a.stockActual - b.stockActual);
+    const low = parts.filter((p) => p.activo !== false && UI.isLowStock(p)).sort((a, b) => a.stockActual - b.stockActual);
     $("lowStock").innerHTML = low.length
       ? low.map((p) => `<tr><td class="part-sku">${UI.esc(p.codigoParte)}</td><td>${UI.esc(p.descripcion)}</td><td>${UI.esc(p.categoria)}</td><td class="text-end text-muted-2">${p.stockMinimo}</td><td class="text-end"><span class="badge ${p.stockActual <= 0 ? "text-bg-danger" : "text-bg-warning"}">${p.stockActual}</span></td></tr>`).join("")
       : UI.stateRow(5, "Sin alertas de stock.");
@@ -116,33 +116,36 @@ function initAdmin() {
     $("histBody").innerHTML = hist.items.length
       ? hist.items.map((o) => {
           const st = estadoStyle(o.estado);
-          return `<tr>
+          const activo = o.activo !== false;
+          return `<tr class="${activo ? "" : "opacity-75"}">
             <td class="part-sku">#${o.idOrdenPedido}</td>
             <td class="text-nowrap">${UI.fecha(o.fechaPedido)}</td>
             <td>${UI.esc(o.cliente)}</td>
             <td>${UI.esc(o.tipoCliente)}</td>
             <td><span class="badge ${st.badge}">${UI.esc(o.estado)}</span></td>
+            <td><span class="badge ${activo ? "text-bg-success" : "text-bg-secondary"}">${activo ? "Activo" : "Inactivo"}</span></td>
             <td class="text-end fw-semibold text-nowrap">${UI.money(o.total)}</td>
             <td class="text-end text-nowrap">
               <button class="btn btn-sm btn-glass me-1" data-oedit="${o.idOrdenPedido}" title="Editar" aria-label="Editar orden ${o.idOrdenPedido}"><i class="bi bi-pencil"></i></button>
-              <button class="btn btn-sm btn-glass text-danger" data-odel="${o.idOrdenPedido}" title="Eliminar" aria-label="Eliminar orden ${o.idOrdenPedido}"><i class="bi bi-trash"></i></button>
+              ${activo ? `<button class="btn btn-sm btn-glass text-danger" data-odel="${o.idOrdenPedido}" title="Dar de baja" aria-label="Dar de baja orden ${o.idOrdenPedido}"><i class="bi bi-trash"></i></button>` : ""}
             </td>
           </tr>`;
         }).join("")
-      : UI.stateRow(7, "No hay ventas que coincidan con el filtro.");
+      : UI.stateRow(8, "No hay ventas que coincidan con el filtro.");
     $("histResumen").textContent = hist.totalRegistros ? `Mostrando ${hist.items.length} de ${hist.totalRegistros} · Total: ${UI.money(hist.sumaTotal)}` : "";
     $("histMore").classList.toggle("d-none", hist.items.length >= hist.totalRegistros);
   }
 
   async function loadHistory(reset) {
     const seq = ++hist.seq; // descarta respuestas viejas si el filtro cambió mientras cargaba
-    if (reset) { hist.pagina = 0; hist.items = []; $("histBody").innerHTML = UI.stateRow(7, "Cargando…"); }
+    if (reset) { hist.pagina = 0; hist.items = []; $("histBody").innerHTML = UI.stateRow(8, "Cargando…"); }
     try {
       const r = await Api.ordenes({
         idEstadoOrden: $("histEstado").value === "todos" ? "" : $("histEstado").value,
         q: $("histBuscar").value.trim(),
         pagina: hist.pagina + 1,
         tamano: HIST_STEP,
+        incluirInactivos: true,
       });
       if (seq !== hist.seq) return;
       hist.pagina += 1;
@@ -152,7 +155,7 @@ function initAdmin() {
       renderHistory();
     } catch (e) {
       if (seq !== hist.seq) return;
-      $("histBody").innerHTML = UI.stateRow(7, e.message, "error");
+      $("histBody").innerHTML = UI.stateRow(8, e.message, "error");
     }
   }
   let histTimer;
@@ -171,8 +174,9 @@ function initAdmin() {
 
   async function editOrder(id) {
     let clientes, o = null;
-    try { [clientes, o] = await Promise.all([Api.clientes(), id ? Api.orden(id) : null]); } catch (e) { fail("No se pudo abrir la orden", e); return; }
+    try { [clientes, o] = await Promise.all([Api.clientes(), id ? Api.orden(id, true) : null]); } catch (e) { fail("No se pudo abrir la orden", e); return; }
     const opts = (list, sel, k, txt) => list.map((x) => `<option value="${x[k]}" ${x[k] === sel ? "selected" : ""}>${UI.esc(txt(x))}</option>`).join("");
+    const activoInicial = o ? o.activo !== false : true;
     const { value } = await Swal.fire({
       title: id ? `Editar orden #${id}` : "Nueva orden",
       width: 640,
@@ -183,6 +187,10 @@ function initAdmin() {
             <div class="col-sm-5"><label class="form-label small" for="oEstado">Estado</label><select id="oEstado" class="form-select">${opts(estados, o && o.idEstadoOrden, "idEstadoOrden", (s) => s.descripcion)}</select></div>
             <div class="col-sm-6"><label class="form-label small" for="oPedido">Fecha del pedido</label><input id="oPedido" type="date" class="form-control" value="${o ? o.fechaPedido : new Date().toLocaleDateString("sv-SE")}"></div>
             <div class="col-sm-6"><label class="form-label small" for="oEntrega">Fecha de entrega</label><input id="oEntrega" type="date" class="form-control" value="${(o && o.fechaEntrega) || ""}"></div>
+            <div class="col-12"><div class="form-check form-switch mt-1">
+              <input class="form-check-input" type="checkbox" role="switch" id="oActivo" ${activoInicial ? "checked" : ""}>
+              <label class="form-check-label small" for="oActivo">Orden activa</label>
+            </div></div>
           </div>
           <div class="d-flex justify-content-between align-items-center mb-2"><span class="form-label small mb-0">Autopartes</span><button type="button" id="oAdd" class="btn btn-sm btn-glass"><i class="bi bi-plus-lg me-1"></i>Agregar</button></div>
           <div id="oItems">${(o && o.items.length ? o.items : [{}]).map((it) => itemRow(it)).join("")}</div>
@@ -208,6 +216,7 @@ function initAdmin() {
           idEstadoOrden: Number($("oEstado").value),
           fechaPedido: $("oPedido").value,
           fechaEntrega: $("oEntrega").value || null,
+          activo: $("oActivo").checked,
           items,
         };
         if (!dto.idCliente) { Swal.showValidationMessage("Elegí un cliente."); return false; }
@@ -232,11 +241,11 @@ function initAdmin() {
     const b = e.target.closest("[data-odel]");
     if (!b) return;
     const id = Number(b.dataset.odel);
-    const ok = await UI.confirmBox({ title: "¿Eliminar la orden?", text: `Se eliminará la orden #${id} con su detalle y seguimiento.`, confirmText: "Sí, eliminar", icon: "warning", danger: true });
+    const ok = await UI.confirmBox({ title: "¿Dar de baja la orden?", text: `Se dará de baja la orden #${id}. Su detalle y seguimiento se conservan.`, confirmText: "Sí, dar de baja", icon: "warning", danger: true });
     if (!ok) return;
-    try { await Api.eliminarOrden(id); } catch (err) { fail("No se pudo eliminar la orden", err); return; }
+    try { await Api.eliminarOrden(id); } catch (err) { fail("No se pudo dar de baja la orden", err); return; }
     loadHistory(true); loadResumen();
-    UI.notify("success", "Orden eliminada");
+    UI.notify("success", "Orden dada de baja");
   });
 
   /* ---------- Inventario (AUTOPARTE + PRODUCTO + PRECIO_PRODUCTO vigente) ---------- */
@@ -270,22 +279,26 @@ function initAdmin() {
     const cat = $("invCat").value;
     const list = parts.filter((p) => (!cat || String(p.idCategoria) === cat) && (!q || `${p.descripcion} ${p.codigoParte}`.toLowerCase().includes(q)));
     if (!list.length) {
-      $("invBody").innerHTML = UI.stateRow(6, "No se encontraron autopartes.");
+      $("invBody").innerHTML = UI.stateRow(7, "No se encontraron autopartes.");
       return;
     }
     $("invBody").innerHTML = list
-      .map((p) => `
-      <tr>
+      .map((p) => {
+        const activo = p.activo !== false;
+        return `
+      <tr class="${activo ? "" : "opacity-75"}">
         <td class="part-sku">${UI.esc(p.codigoParte)}</td>
         <td>${UI.esc(p.descripcion)}</td>
         <td>${UI.esc(p.categoria)}</td>
         <td>${p.precio != null ? UI.money(p.precio) : "–"}</td>
-        <td><input type="number" min="0" class="form-control form-control-sm stock-input" data-id="${p.idProducto}" value="${p.stockActual}"></td>
+        <td><input type="number" min="0" class="form-control form-control-sm stock-input" data-id="${p.idProducto}" value="${p.stockActual}" ${activo ? "" : "disabled"}></td>
+        <td><span class="badge ${activo ? "text-bg-success" : "text-bg-secondary"}">${activo ? "Activo" : "Inactivo"}</span></td>
         <td class="text-end text-nowrap">
           <button class="btn btn-sm btn-glass me-1" data-edit="${p.idProducto}" title="Editar" aria-label="Editar ${UI.esc(p.descripcion)}"><i class="bi bi-pencil"></i></button>
-          <button class="btn btn-sm btn-glass text-danger" data-del="${p.idProducto}" title="Dar de baja" aria-label="Dar de baja ${UI.esc(p.descripcion)}"><i class="bi bi-trash"></i></button>
+          ${activo ? `<button class="btn btn-sm btn-glass text-danger" data-del="${p.idProducto}" title="Dar de baja" aria-label="Dar de baja ${UI.esc(p.descripcion)}"><i class="bi bi-trash"></i></button>` : ""}
         </td>
-      </tr>`).join("");
+      </tr>`;
+      }).join("");
   }
 
   function renderCategoryControls() {
@@ -296,7 +309,7 @@ function initAdmin() {
 
   async function reloadParts() {
     try {
-      parts = await Api.autopartes();
+      parts = await Api.autopartes(true);
     } catch (e) {
       fail("No se pudo actualizar el inventario", e);
       return;
@@ -329,6 +342,7 @@ function initAdmin() {
 
   async function editPart(p) {
     const img = p.imagenUrl || "";
+    const activoInicial = p.activo !== false;
     const { value } = await Swal.fire({
       title: "Editar autoparte",
       html: `
@@ -345,6 +359,10 @@ function initAdmin() {
           <div class="mb-3 text-center">
             <img id="epPreview" src="${UI.esc(img)}" alt="Vista previa" class="img-fluid rounded ${img ? "" : "d-none"}" style="max-height: 160px; object-fit: contain;">
             <div id="epPreviewEmpty" class="small text-muted-2 ${img ? "d-none" : ""}">Sin imagen para mostrar</div>
+          </div>
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" role="switch" id="epActivo" ${activoInicial ? "checked" : ""}>
+            <label class="form-check-label small" for="epActivo">Autoparte activa</label>
           </div>
           <div class="form-text">Al cambiar el precio, el sistema registra uno nuevo en el historial de precios. Si dejás la URL vacía, se quitará la imagen.</div>
         </div>`,
@@ -375,9 +393,10 @@ function initAdmin() {
         const raw = document.getElementById("epPrecio").value;
         const precio = Number(raw);
         const imagenUrl = document.getElementById("epImagen").value.trim() || null;
+        const activo = document.getElementById("epActivo").checked;
         if (!descripcion) { Swal.showValidationMessage("La descripción no puede estar vacía."); return false; }
         if (raw === "" || !Number.isFinite(precio) || precio <= 0) { Swal.showValidationMessage("Ingresá un precio válido (mayor a 0)."); return false; }
-        return { descripcion, idCategoria, precio, imagenUrl };
+        return { descripcion, idCategoria, precio, imagenUrl, activo };
       },
     });
     if (!value) return;
@@ -416,7 +435,7 @@ function initAdmin() {
       codigoParte: $("npSku").value.trim(),
       descripcion: $("npNombre").value.trim(),
       idCategoria: Number($("npCat").value),
-      unidadMedida: $("npUnidad").value.trim() || "unidad",
+      unidadMedida: "unidad",
       precio: Number($("npPrecio").value),
       stockActual: Math.max(0, parseInt($("npStock").value, 10) || 0),
       stockMinimo: Math.max(0, parseInt($("npMin").value, 10) || 0),
@@ -445,29 +464,37 @@ function initAdmin() {
   function renderAssocModels() {
     const sorted = [...models].sort((a, b) => (a.marca + a.nombre).localeCompare(b.marca + b.nombre));
     $("assocModels").innerHTML = sorted.length
-      ? sorted.map((m) => `
-      <div class="assoc-model ${m.idModelo === selectedModel ? "active" : ""}" data-id="${m.idModelo}">
-        <div class="fw-semibold">${UI.esc(m.marca)} ${UI.esc(m.nombre)}</div>
+      ? sorted.map((m) => {
+          const activo = m.activo !== false;
+          return `
+      <div class="assoc-model ${m.idModelo === selectedModel ? "active" : ""} ${activo ? "" : "opacity-75"}" data-id="${m.idModelo}">
+        <div class="fw-semibold">${UI.esc(m.marca)} ${UI.esc(m.nombre)} ${activo ? "" : '<span class="badge text-bg-secondary ms-1">Inactivo</span>'}</div>
         <div class="small text-muted-2">${yearsOf(m) ? yearsOf(m) + " · " : ""}${countFor(m.idModelo)} partes</div>
-      </div>`).join("")
+      </div>`;
+        }).join("")
       : `<div class="small text-muted-2 p-2">Todavía no hay modelos cargados.</div>`;
-    $("brandList").innerHTML = [...new Set(models.map((m) => m.marca))].sort().map((b) => `<option value="${UI.esc(b)}"></option>`).join("");
+    $("brandList").innerHTML = [...new Set(models.filter((m) => m.activo !== false).map((m) => m.marca))].sort().map((b) => `<option value="${UI.esc(b)}"></option>`).join("");
   }
 
   function renderAssocParts() {
     const m = models.find((x) => x.idModelo === selectedModel);
     if (!m) { $("assocParts").innerHTML = ""; $("asCount").textContent = ""; $("asBrand").textContent = "Seleccioná un modelo"; $("asModel").textContent = ""; return; }
+    const modelActivo = m.activo !== false;
     $("asBrand").textContent = m.marca;
-    $("asModel").textContent = yearsOf(m) ? `${m.nombre} (${yearsOf(m)})` : m.nombre;
+    $("asModel").textContent = (yearsOf(m) ? `${m.nombre} (${yearsOf(m)})` : m.nombre) + (modelActivo ? "" : " · Inactivo");
     $("asCount").textContent = `${countFor(m.idModelo)} asociadas`;
     $("assocParts").innerHTML = parts
-      .map((p) => `
+      .map((p) => {
+        const partActivo = p.activo !== false;
+        const disabled = !modelActivo || !partActivo;
+        return `
       <div class="col-md-6">
-        <label class="glass p-2 px-3 d-flex align-items-center gap-2 w-100" style="cursor:pointer;border-radius:.8rem">
-          <input class="form-check-input mt-0" type="checkbox" data-part="${p.idProducto}" ${p.modelos.includes(m.idModelo) ? "checked" : ""}>
-          <span><span class="d-block small fw-semibold">${UI.esc(p.descripcion)}</span><span class="part-sku">${UI.esc(p.codigoParte)} · ${UI.esc(p.categoria)}</span></span>
+        <label class="glass p-2 px-3 d-flex align-items-center gap-2 w-100 ${disabled ? "opacity-75" : ""}" style="cursor:${disabled ? "not-allowed" : "pointer"};border-radius:.8rem">
+          <input class="form-check-input mt-0" type="checkbox" data-part="${p.idProducto}" ${p.modelos.includes(m.idModelo) ? "checked" : ""} ${disabled ? "disabled" : ""}>
+          <span><span class="d-block small fw-semibold">${UI.esc(p.descripcion)} ${partActivo ? "" : '<span class="badge text-bg-secondary ms-1">Inactiva</span>'}</span><span class="part-sku">${UI.esc(p.codigoParte)} · ${UI.esc(p.categoria)}</span></span>
         </label>
-      </div>`).join("");
+      </div>`;
+      }).join("");
   }
 
   $("assocModels").addEventListener("click", (e) => {
@@ -512,7 +539,7 @@ function initAdmin() {
     btn.disabled = true;
     try {
       const created = await Api.crearModelo(dto); // el backend crea la MARCA si no existe
-      models = await Api.modelos();
+      models = await Api.modelos(true);
       selectedModel = created && created.idModelo != null ? created.idModelo : selectedModel;
       form.reset();
       renderAssocModels(); renderAssocParts();
@@ -525,6 +552,7 @@ function initAdmin() {
   });
 
   async function editModel(m) {
+    const activoInicial = m.activo !== false;
     const { value } = await Swal.fire({
       title: "Editar modelo",
       html: `
@@ -543,6 +571,10 @@ function initAdmin() {
               <input id="emAnioHasta" type="number" min="1900" max="2100" class="form-control mb-3" value="${m.anioHasta ?? ""}">
             </div>
           </div>
+          <div class="form-check form-switch mt-1 mb-2">
+            <input class="form-check-input" type="checkbox" role="switch" id="emActivo" ${activoInicial ? "checked" : ""}>
+            <label class="form-check-label small" for="emActivo">Modelo activo</label>
+          </div>
         </div>`,
       showCancelButton: true,
       confirmButtonText: "Guardar cambios",
@@ -558,30 +590,31 @@ function initAdmin() {
         const anioHastaRaw = document.getElementById("emAnioHasta").value;
         const anioDesde = anioDesdeRaw === "" ? null : Number(anioDesdeRaw);
         const anioHasta = anioHastaRaw === "" ? null : Number(anioHastaRaw);
+        const activo = document.getElementById("emActivo").checked;
         if (!marca || !nombre) { Swal.showValidationMessage("Marca y modelo son obligatorios."); return false; }
-        return { marca, nombre, anioDesde, anioHasta };
+        return { marca, nombre, anioDesde, anioHasta, activo };
       },
     });
     if (!value) return;
     try {
       await Api.editarModelo(m.idModelo, value);
     } catch (e) { fail("No se pudo guardar el modelo", e); return; }
-    models = await Api.modelos();
+    models = await Api.modelos(true);
     selectedModel = m.idModelo;
     renderAssocModels(); renderAssocParts();
     UI.notify("success", "Modelo actualizado");
   }
 
   async function deleteModel(m) {
-    const ok = await UI.confirmBox({ title: "¿Eliminar el modelo?", text: `Se eliminará "${m.marca} ${m.nombre}" y sus asociaciones con autopartes.`, confirmText: "Sí, eliminar", icon: "warning", danger: true });
+    const ok = await UI.confirmBox({ title: "¿Dar de baja el modelo?", text: `Se dará de baja "${m.marca} ${m.nombre}". Sus referencias se conservan.`, confirmText: "Sí, dar de baja", icon: "warning", danger: true });
     if (!ok) return;
     try {
       await Api.eliminarModelo(m.idModelo);
-    } catch (err) { fail("No se pudo eliminar el modelo", err); return; }
-    models = await Api.modelos();
+    } catch (err) { fail("No se pudo dar de baja el modelo", err); return; }
+    models = await Api.modelos(true);
     selectedModel = models[0] ? models[0].idModelo : null;
     renderAssocModels(); renderAssocParts();
-    UI.notify("success", "Modelo eliminado");
+    UI.notify("success", "Modelo dado de baja");
   }
 
   $("assocModels").addEventListener("contextmenu", (e) => {
@@ -591,19 +624,24 @@ function initAdmin() {
     const idModelo = Number(el.dataset.id);
     const m = models.find((x) => x.idModelo === idModelo);
     if (!m) return;
-    Swal.fire({
+    const activo = m.activo !== false;
+    const opts = {
       title: `${m.marca} ${m.nombre}`,
-      showDenyButton: true,
       showCancelButton: true,
       confirmButtonText: "Editar",
-      denyButtonText: "Eliminar",
       cancelButtonText: "Cancelar",
       reverseButtons: true,
       buttonsStyling: false,
-      customClass: { confirmButton: "btn btn-accent mx-1", denyButton: "btn btn-glass btn-swal-danger mx-1", cancelButton: "btn btn-glass mx-1" },
-    }).then((result) => {
+      customClass: { confirmButton: "btn btn-accent mx-1", cancelButton: "btn btn-glass mx-1" },
+    };
+    if (activo) {
+      opts.showDenyButton = true;
+      opts.denyButtonText = "Dar de baja";
+      opts.customClass.denyButton = "btn btn-glass btn-swal-danger mx-1";
+    }
+    Swal.fire(opts).then((result) => {
       if (result.isConfirmed) editModel(m);
-      else if (result.isDenied) deleteModel(m);
+      else if (result.isDenied && activo) deleteModel(m);
     });
   });
 
@@ -620,19 +658,19 @@ function initAdmin() {
   ]);
   document.addEventListener("themechange", renderCharts);
 
-  $("histBody").innerHTML = UI.stateRow(7, "Cargando…");
+  $("histBody").innerHTML = UI.stateRow(8, "Cargando…");
   $("lowStock").innerHTML = UI.stateRow(5, "Cargando…");
-  $("invBody").innerHTML = UI.stateRow(6, "Cargando…");
+  $("invBody").innerHTML = UI.stateRow(7, "Cargando…");
 
   // Cada bloque carga por separado: si uno falla, el resto del panel sigue funcionando
   (async () => {
     try {
-      [parts, models, cats] = await Promise.all([Api.autopartes(), Api.modelos(), Api.categorias()]);
+      [parts, models, cats] = await Promise.all([Api.autopartes(true), Api.modelos(true), Api.categorias()]);
       selectedModel = models[0] ? models[0].idModelo : null;
       renderCategoryControls();
       refreshParts();
     } catch (e) {
-      const msg = UI.stateRow(6, e.message, "error");
+      const msg = UI.stateRow(7, e.message, "error");
       $("invBody").innerHTML = msg; $("lowStock").innerHTML = UI.stateRow(5, e.message, "error");
     }
   })();

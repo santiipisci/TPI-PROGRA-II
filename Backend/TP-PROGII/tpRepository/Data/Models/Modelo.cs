@@ -17,6 +17,8 @@ public partial class Modelo
 
     public short? AnioHasta { get; set; }
 
+    public bool Activo { get; set; }
+
     public virtual Marca IdMarcaNavigation { get; set; }
 
     public virtual ICollection<Vehiculo> Vehiculos { get; set; } = new List<Vehiculo>();

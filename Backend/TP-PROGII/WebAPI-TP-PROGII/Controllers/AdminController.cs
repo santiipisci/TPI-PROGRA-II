@@ -23,6 +23,7 @@ public class AdminController : ControllerBase
         [FromQuery] int? idEstadoOrden,
         [FromQuery] string? q,
         [FromQuery] int pagina = 1,
-        [FromQuery] int tamano = 10) =>
-        Ok(await _service.GetOrdenesAsync(idEstadoOrden, q, pagina, tamano));
+        [FromQuery] int tamano = 10,
+        [FromQuery] bool incluirInactivos = false) =>
+        Ok(await _service.GetOrdenesAsync(idEstadoOrden, q, pagina, tamano, incluirInactivos));
 }

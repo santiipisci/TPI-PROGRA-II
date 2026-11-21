@@ -15,9 +15,9 @@ public class AutopartesRepository : IAutopartesRepository
         _context = context;
     }
 
-    public async Task<List<AutoparteDto>> GetAutopartesAsync()
+    public async Task<List<AutoparteDto>> GetAutopartesAsync(bool incluirInactivos = false)
     {
-        var autopartes = await _context.Autopartes
+        var query = _context.Autopartes
             .AsNoTracking()
             .Include(a => a.IdCategoriaNavigation)
             .Include(a => a.IdProductoNavigation)
@@ -25,6 +25,12 @@ public class AutopartesRepository : IAutopartesRepository
             .Include(a => a.IdProductoNavigation)
                 .ThenInclude(p => p.Imagenes)
             .Include(a => a.IdModelos)
+            .AsQueryable();
+
+        if (!incluirInactivos)
+            query = query.Where(a => a.IdProductoNavigation.Activo);
+
+        var autopartes = await query
             .OrderBy(a => a.IdProductoNavigation.Descripcion)
             .ToListAsync();
 
@@ -38,7 +44,7 @@ public class AutopartesRepository : IAutopartesRepository
     }
 
     public Task<bool> ExisteAutoparteAsync(int idProducto) =>
-        _context.Autopartes.AnyAsync(a => a.IdProducto == idProducto);
+        _context.Autopartes.AnyAsync(a => a.IdProducto == idProducto && a.IdProductoNavigation.Activo);
 
     public async Task<int> CrearAutoparteAsync(AutoparteCrearDto dto)
     {
@@ -108,6 +114,7 @@ public class AutopartesRepository : IAutopartesRepository
 
         autoparte.IdCategoria = dto.IdCategoria;
         autoparte.IdProductoNavigation.Descripcion = dto.Descripcion.Trim();
+        autoparte.IdProductoNavigation.Activo = dto.Activo;
 
         var imagenUrl = string.IsNullOrWhiteSpace(dto.ImagenUrl) ? null : dto.ImagenUrl.Trim();
         var imagenPrincipal = autoparte.IdProductoNavigation.Imagenes
@@ -188,9 +195,11 @@ public class AutopartesRepository : IAutopartesRepository
 
     public async Task ActualizarStockAsync(int idProducto, int stockActual)
     {
-        var autoparte = await _context.Autopartes.FirstOrDefaultAsync(a => a.IdProducto == idProducto);
+        var autoparte = await _context.Autopartes
+            .Include(a => a.IdProductoNavigation)
+            .FirstOrDefaultAsync(a => a.IdProducto == idProducto);
 
-        if (autoparte == null)
+        if (autoparte == null || !autoparte.IdProductoNavigation.Activo)
             throw new NotFoundException("La autoparte no existe.");
 
         autoparte.StockActual = stockActual;
@@ -201,39 +210,14 @@ public class AutopartesRepository : IAutopartesRepository
     {
         var autoparte = await _context.Autopartes
             .Include(a => a.IdProductoNavigation)
-                .ThenInclude(p => p.DetalleOrdenPedidos)
-            .Include(a => a.IdProductoNavigation)
-                .ThenInclude(p => p.DetalleFacturas)
-            .Include(a => a.IdProductoNavigation)
-                .ThenInclude(p => p.PrecioProductos)
-            .Include(a => a.IdProductoNavigation)
-                .ThenInclude(p => p.Imagenes)
-            .Include(a => a.ProduccionAutopartes)
             .FirstOrDefaultAsync(a => a.IdProducto == idProducto);
 
-        if (autoparte == null)
+        if (autoparte == null || !autoparte.IdProductoNavigation.Activo)
             throw new NotFoundException("La autoparte no existe.");
 
-        if (autoparte.IdProductoNavigation.DetalleOrdenPedidos.Any() || 
-            autoparte.IdProductoNavigation.DetalleFacturas.Any())
-            throw new BusinessException("No se puede eliminar una autoparte que tiene órdenes o facturas asociadas.");
-
-        await using var tx = await _context.Database.BeginTransactionAsync();
-
-        // Eliminar relaciones many-to-many con modelos
-        autoparte.IdModelos.Clear();
-
-        // Eliminar datos relacionados
-        _context.ProduccionAutopartes.RemoveRange(autoparte.ProduccionAutopartes);
-        _context.PrecioProductos.RemoveRange(autoparte.IdProductoNavigation.PrecioProductos);
-        _context.ImagenProductos.RemoveRange(autoparte.IdProductoNavigation.Imagenes);
-
-        // Eliminar autoparte y producto
-        _context.Autopartes.Remove(autoparte);
-        _context.Productos.Remove(autoparte.IdProductoNavigation);
-
+        // Baja lógica: se conserva el producto/autoparte y su historial (órdenes, facturas, precios, etc.)
+        autoparte.IdProductoNavigation.Activo = false;
         await _context.SaveChangesAsync();
-        await tx.CommitAsync();
     }
 
     /* ======================================================================================= */
@@ -262,6 +246,7 @@ public class AutopartesRepository : IAutopartesRepository
             a.StockActual,
             a.StockMinimo,
             imagenUrl,
-            a.IdModelos.Select(m => m.IdModelo).ToList());
+            a.IdModelos.Where(m => m.Activo).Select(m => m.IdModelo).ToList(),
+            a.IdProductoNavigation.Activo);
     }
 }
